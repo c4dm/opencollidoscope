@@ -14,6 +14,10 @@
 #include "Config.h"
 
 
+/**
+ * Audio engine of the application. It uses the Cinder library to process audio in input and output. 
+ * The audio engine manages both waves. All methods have a waveIndx parameter to address a specific wave.
+ */ 
 class AudioEngine
 {
 public:
@@ -26,6 +30,9 @@ public:
     AudioEngine( const AudioEngine &copy ) = delete;
     AudioEngine & operator=(const AudioEngine &copy) = delete;
 
+    /**
+    * Set up of the audio engine. 
+    */
     void setup( const Config& Config );
 
     size_t getSampleRate();
@@ -40,9 +47,19 @@ public:
 
     void noteOff( size_t waveIdx, int note );
 
+    /**
+    * Returns the number of elements available to read in the wave ring buffer.
+    * The wave ring buffer is used to pass the size of the wave chunks from the audio thread to the graphic thread, 
+    * when a new wave is recorded.
+    */ 
     size_t getRecordWaveAvailable( size_t index );
-
-    bool readRecordWave( size_t waveIdx, RecordWaveMsg*, size_t count );
+    /**
+    * Called from the graphic thread. Reads count elements from the wave ring buffer into \a buffer.
+    * The wave ring buffer is used to pass the size of the wave chunks from the audio thread to the graphic thread, 
+    * when a new wave is recorded.
+    *
+    */
+    bool readRecordWave( size_t waveIdx, RecordWaveMsg* buffer, size_t count );
 
     void setSelectionSize( size_t waveIdx, size_t size );
 
@@ -54,6 +71,10 @@ public:
 
     void checkCursorTriggers( size_t waveIdx, std::vector<CursorTriggerMsg>& cursorTriggers );
 
+    /**
+     * Returns a const reference to the audio output buffer. This is the buffer that is sent off to the audio interface at each audio cycle. 
+     * It is used in the graphic thread to draw the oscilloscope.
+     */
     const ci::audio::Buffer& getAudioOutputBuffer( size_t waveIdx ) const;
 
 

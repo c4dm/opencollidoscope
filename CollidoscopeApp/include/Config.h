@@ -6,6 +6,12 @@
 #include "cinder/Xml.h"
 
 
+/**
+ * Configuration class gathers in one place all the values recided at runtime
+ *
+ * Reading the configuration from an XML file is partially implemented but not used at the moment
+ *
+ */ 
 class Config
 {
 public:
@@ -21,22 +27,26 @@ public:
 
     std::string getInputDeviceKey() const
     {
-        return mAudioInputDeviceKey;  // Komplete 1/2
-        //return "{0.0.1.00000000}.{a043bc8c-1dd1-4c94-82b4-ad8320cac5a5}"; // Komplete 3/4 
-        //return "{0.0.1.00000000}.{828b681b-cc0c-44e1-93c9-5f1f46f5926f}"; // Realtek 
+        return mAudioInputDeviceKey; 
     }
 
+    /**
+     * Returns number of chunks in a wave 
+     */ 
     std::size_t getNumChunks() const
     {
         return mNumChunks;
     }
 
-    /* return wave lenght in seconds */
+    /** returns wave lenght in seconds */
     double getWaveLen() const
     {
         return mWaveLen;
     }
 
+    /**
+     * Returns wave's selection color
+     */ 
     ci::Color getWaveSelectionColor(size_t waveIdx) const
     {
         if (waveIdx == 0){
@@ -47,19 +57,18 @@ public:
         }
     }
 
+    /**
+     * The size of the ring buffer used to trigger a visual cursor from the audio thread when a new grain is created
+     */ 
     std::size_t getCursorTriggerMessageBufSize() const
     {
         return 512;
     }
 
-    // returns the index of the wave associated to the MIDI channel passed as argument 
+    /** returns the index of the wave associated to the MIDI channel passed as argument */
     size_t getWaveForMIDIChannel( unsigned char channelIdx )
     {
         return channelIdx;
-        /*for ( int i = 0; i < NUM_WAVES; i++ ){
-            if ( channelIdx == mMidiChannels[i] )
-                return i;
-        }*/
     }
 
     double getMaxGrainDurationCoeff() const
@@ -82,11 +91,19 @@ public:
         return 6;
     }
 
+    /**
+     * Returns the maximum size of a wave selection in number of chunks.
+     */ 
     size_t getMaxSelectionNumChunks() const
     {
         return 37;
     }
 
+    /**
+     * The value returned is used when creating the oscilloscope. 
+     * The oscilloscope represents the audio output buffer graphically. However it doesn't need to be as refined as the 
+     * audio wave and it's downsampled using the following formula :  number of oscilloscope points = size o audio output buffer / getOscilloscopeNumPointsDivider() 
+     */ 
     size_t getOscilloscopeNumPointsDivider() const
     {
         return 4;

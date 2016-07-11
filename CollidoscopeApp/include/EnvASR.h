@@ -2,6 +2,16 @@
 
 namespace collidoscope {
 
+
+/* 
+ * An ASR envelope with linear shape. It is modeled after the STK envelope classes.
+ * The tick() method advances the computation of the envelope one sample and returns the computed sample
+ * The class is templated for the type of the samples that each tick of the envelope produces. 
+ *
+ * Client classes can set/get the current state of the envelope with the
+ * respective getter/setter methods
+ *
+ */
 template <typename T>
 class EnvASR
 {

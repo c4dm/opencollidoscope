@@ -17,7 +17,7 @@ Config::Config() :
 
 }
 
-
+// uses Cinder api to parse configuration in XML file 
 void Config::loadFromFile( std::string&& path )
 {
     try {

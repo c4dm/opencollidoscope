@@ -4,16 +4,28 @@
 
 #include "DrawInfo.h"
 
+
+
+/**
+ * The oscilloscope that oscillates when Collidoscope is played 
+ */ 
 class Oscilloscope
 {
 
 public:
 
+    /**
+     * Constructor, accepts as argument the number of points that make up the oscilloscope line 
+     */ 
     Oscilloscope( size_t numPoints ):
         mNumPoints( numPoints ),
         mLine( std::vector<ci::vec2>( numPoints, ci::vec2() ) )
         {}
 
+    /**
+     * Sets the value of a point of the oscilloscope. The value is passed as an audio coordinate [-1.0, 1.0].
+     * A reference to DrawInfo is passed to calculate the graphic coordinate of the point based on the audio value passed. 
+     */ 
     void  setPoint( int index, float audioVal, const DrawInfo &di ){
 
         if ( audioVal > 1.0f ){
@@ -45,6 +57,9 @@ public:
 
     }
 
+    /**
+     * Draws this oscilloscope as a cinder::PolyLine2f
+     */ 
     void draw()
     {
         ci::gl::color(1.0f, 1.0f, 1.0f);

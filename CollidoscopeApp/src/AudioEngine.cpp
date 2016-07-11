@@ -5,6 +5,7 @@
 
 using namespace ci::audio;
 
+/* Frequency ratios in the chromatic scale */
 double chromaticRatios[] = { 
     1, 
     1.0594630943591, 
@@ -20,6 +21,14 @@ double chromaticRatios[] = {
     1.8877486253586 
 };
 
+
+/*
+ * Calculates the ratio between the frequency of the midi note passed as argument and middle C note ( MIDI value = 60 ).
+ * This is used for pitch shifting the granular synth output, according to the key pressed by the user.
+ * The middle C is taken as reference in pitch in the pitch shifting of Collidoscope output.
+ * That is, with the middle C the output is not pitch shifted at all and is equal in frequency to the recorder sample.
+ *
+ */ 
 inline double calculateMidiNoteRatio( int midiNote )
 {
     int distanceFromCenter = midiNote - 60; // 60 is the central midi note 
@@ -174,6 +183,7 @@ size_t AudioEngine::getRecordWaveAvailable( size_t waveIdx )
     return mBufferRecorderNodes[waveIdx]->getRingBuffer().getAvailableRead();
 }
 
+ 
 bool AudioEngine::readRecordWave( size_t waveIdx, RecordWaveMsg* buffer, size_t count )
 {
     return mBufferRecorderNodes[waveIdx]->getRingBuffer().read( buffer, count );

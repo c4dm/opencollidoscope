@@ -12,7 +12,14 @@ typedef std::shared_ptr<class BufferToWaveRecorderNode>	BufferToWaveRecorderNode
 
 typedef ci::audio::dsp::RingBufferT<RecordWaveMsg> RecordWaveMsgRingBuffer;
 
-
+/**
+ * A \a Node in the audio graph of the Cinder audio library that records input in a buffer.
+ *
+ * This class is similar to \a cinder::audio::BufferRecorderNode (it's a derivative work of this class indeed) but it has an additional feature.
+ * When recording it uses the audio input samples to compute the size values of the visual chunks. 
+ * The chunks values are stored in a ring buffer and fetched by the graphic thread to paint the wave as it gets recorded.
+ *
+ */
 class BufferToWaveRecorderNode : public ci::audio::SampleRecorderNode {
 public:
 
@@ -54,8 +61,10 @@ public:
     //! Returns the frame of the last buffer overrun or 0 if none since the last time this method was called. When this happens, it means the recorded buffer probably has skipped some frames.
     uint64_t getLastOverrun();
 
+    //! returns a reference to the ring buffer when the size values of the chunks is stored, when a new wave is recorder
     RecordWaveMsgRingBuffer& getRingBuffer() { return mRingBuffer; }
 
+    //!returns a pointer to the buffer where the audio is recorder. This is used by the PGranular to create the granular synthesis 
     ci::audio::Buffer* getRecorderBuffer() { return &mRecorderBuffer; }
 
 
