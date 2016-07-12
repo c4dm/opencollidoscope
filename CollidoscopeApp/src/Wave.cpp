@@ -96,7 +96,7 @@ void Wave::draw( const DrawInfo& di ){
 
 	
 	const float wavePixelLen =  ( mNumChunks * ( 2 + Chunk::kWidth ) );
-	/* scale the x-axis for the wave to fit the window */
+	/* scale the x-axis for the wave to fit the window precisely */
 	gl::scale( ((float)di.getWindowWidth() ) / wavePixelLen , 1.0f);
 	/* draw the chunks */
 	if (mSelection.isNull()){

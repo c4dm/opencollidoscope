@@ -10,6 +10,29 @@ namespace collidoscope {
 
 using std::size_t;
 
+/**
+ * The very core of the Collidoscope audio engine: the granular synthesizer.
+ * Based on SuperCollider's TGrains and Ross Becina's "Implementing Real-Time Granular Synthesis" 
+ *
+ * It implements Collidoscope's selection-based approach to granular synthesis. 
+ * A grain is basically a selection of a recorded sample of audio. 
+ * Grains are played in a loop: they are retriggered each time they reach the end of the selection.
+ * However, if the duration coefficient is greater than one, a new grain is re-triggered before the previous one is done. 
+ * The grains start to overlap with each other and create the typical eerie sound of grnular synthesis.
+ * Also every time a new grain is triggered, it is offset of a few samples from the initial position to make the timbre more interesting.
+ *
+ *
+ * PGranular uses a linear ASR envelope with 10 milliseconds attack and 50 milliseconds release.
+ *
+ * Note that PGranular is header based and only depends on std library and on "EnvASR.h" (also header based).
+ * This means you can embedd it in two your project just by copying these two files over.
+ *
+ * Template arguments: 
+ * T: type of the audio samples (normally float or double) 
+ * RandOffsetFunc: type of the callable passed as argument to the contructor
+ * TriggerCallbackFunc: type of the callable passed as argument to the contructor
+ *
+ */ 
 template <typename T, typename RandOffsetFunc, typename TriggerCallbackFunc>
 class PGranular
 {
@@ -24,6 +47,9 @@ public:
         return static_cast<T> ((1 - decimal) * xn + decimal * xn_1);
     }
 
+    /**
+     * A single grain of the granular synthesis 
+     */ 
     struct PGrain
     {
         double phase;    // read pointer to mBuffer of this grain 
@@ -32,13 +58,24 @@ public:
         size_t age;      // age of this grain in samples 
         size_t duration; // duration of this grain in samples. minimum = 4
 
-        double b1;       // hann envelope from Ross Becina "Implementing real time Granular Synthesis"
+        double b1;       // hann envelope from Ross Becina's "Implementing real time Granular Synthesis"
         double y1;
         double y2;
     };
 
 
 
+    /**
+     * Constructor.
+     *
+     * \param buffer a pointer to an array of T that contains the original sample that will be granulized
+     * \param bufferLen length of buffer in samples 
+     * \rand function returning of type size_t ()(void) that is called back each time a new grain is generated. The returned value is used 
+     * to offset the starting sample of the grain. This adds more colour to the sound especially with small selections. 
+     * \triggerCallback function of type void ()(char, int) that is called back each time a new grain is triggered.
+     *      The function is passed the character 't' as first parameter when a new grain is triggered and the characted 't' when the synths becomes idle.
+     * \ID id of this PGrain is passed to the triggerCallback function as second parameter to identify this PGranular as the caller.
+     */ 
     PGranular( const T* buffer, size_t bufferLen, size_t sampleRate, RandOffsetFunc & rand, TriggerCallbackFunc & triggerCallback, int ID ) :
         mBuffer( buffer ),
         mBufferLen( bufferLen ),
@@ -71,29 +108,30 @@ public:
 
     ~PGranular(){}
 
-    /* sets multiplier of duration of grains in seconds */
+    /** Sets multiplier of duration of grains in seconds */
     void setGrainsDurationCoeff( double coeff )
     {
         mGrainsDurationCoeff = coeff;
 
-        mGrainsDuration = std::lround( mTriggerRate * coeff ); // FIXME check if right rounding 
+        mGrainsDuration = std::lround( mTriggerRate * coeff ); 
 
         if ( mGrainsDuration < kMinGrainsDuration )
             mGrainsDuration = kMinGrainsDuration;
     }
 
-    /* sets rate of grains. e.g rate = 2 means one octave higer */
+    /** Sets rate of grains. e.g rate = 2 means one octave higer */
     void setGrainsRate( double rate )
     {
         mGrainsRate = rate;
     }
 
-    // sets trigger rate in samples 
+    /** sets the selection start in samples */
     void setSelectionStart( size_t start )
     {
         mGrainsStart = start;
     }
 
+    /** Sets the selection size ( and therefore the trigger rate) in samples */
     void setSelectionSize( size_t size )
     {
 
@@ -107,11 +145,14 @@ public:
 
     }
 
+    /** Sets the attenuation of the grains with respect to the level of the recorded sample
+     *  attenuation is in amp value and defaule value is 0.25118864315096 (-12dB) */
     void setAttenuation( T attenuation )
     {
         mAttenuation = attenuation;
     }
 
+    /** Starts the synthesis engine */
     void noteOn( double rate )
     {
         if ( mEnvASR.getState() == EnvASR<T>::State::eIdle ){
@@ -125,6 +166,7 @@ public:
         }
     }
 
+    /** Stops the synthesis engine */
     void noteOff()
     {
         if ( mEnvASR.getState() != EnvASR<T>::State::eIdle ){
@@ -132,11 +174,19 @@ public:
         }
     }
 
+    /** Whether the synthesis engine is active or not. After noteOff is called the synth stays active until the envelope decays to 0 */
     bool isIdle()
     {
         return mEnvASR.getState() == EnvASR<T>::State::eIdle;
     }
 
+    /**
+     * Runs the granular engine and stores the output in \a audioOut
+     * 
+     * \param pointer to an array of T. This will be filled with the output of PGranular. It needs to be at least \a numSamples lond
+     * \param tempBuffer a temporary buffer used to store the envelope value. It needs to be at leas \a numSamples long
+     * \param numSamples number of samples to be processed 
+     */ 
     void process( T* audioOut, T* tempBuffer, size_t numSamples )
     {
         
@@ -144,7 +194,7 @@ public:
         size_t envSamples = 0;
         bool becameIdle = false;
 
-        // do the envelope first and store it in the tempBuffer 
+        // process the envelope first and store it in the tempBuffer 
         for ( size_t i = 0; i < numSamples; i++ ){
             tempBuffer[i] = mEnvASR.tick();
             envSamples++;
@@ -156,8 +206,10 @@ public:
             }
         }
 
+        // does the actual grains processing 
         processGrains( audioOut, tempBuffer, envSamples );
 
+        // becomes idle if the envelope goes to idle state 
         if ( becameIdle ){
             mTriggerCallback( 'e', mID );
             reset();
@@ -174,7 +226,7 @@ private:
             synthesizeGrain( mGrains[grainIdx], audioOut, envelopeValues, numSamples );
 
             if ( !mGrains[grainIdx].alive ){
-                // this grain is dead so copyu the last of the active grains here 
+                // this grain is dead so copy the last of the active grains here 
                 // so as to keep all active grains at the beginning of the array 
                 // don't increment grainIdx so the last active grain is processed next cycle
                 // if this grain is the last active grain then mNumAliveGrains is decremented 
@@ -243,6 +295,7 @@ private:
         }
     }
 
+    // synthesize a single grain 
     // audioOut = pointer to audio block to fill 
     // numSamples = numpber of samples to process for this block
     void synthesizeGrain( PGrain &grain, T* audioOut, T* envelopeValues, size_t numSamples )

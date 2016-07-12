@@ -17,6 +17,7 @@ class EnvASR
 {
 public:
 
+    /** Possible states of the envelope. Idle means the envelope ouputs 0 */
     enum class State {
         eAttack,
         eSustain,
@@ -40,6 +41,7 @@ public:
         mReleaseRate = T( 1.0 ) / (releaseTime * sampleRate);
     }
 
+    /** Produces one sample worth of envelope */
     T tick()
     {
 

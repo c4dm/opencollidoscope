@@ -3,8 +3,7 @@
 #include "cinder/audio/dsp/RingBuffer.h"
 
 
-/* Packs together a RingBuffer and the erlated array used to exchange data (read/write) with the ring buffer 
-*/
+/** Packs together a cinder::audio::dsp::RingBuffer and the related array used passed as argument to exchange data (read/write) with the ring buffer  */
 template <typename T>
 class RingBufferPack {
 

@@ -2,10 +2,20 @@
 
 #include "cinder/Area.h"
 
+/**
+ * The DrawInfo class holds size information for drawing the waves in the screen. 
+ * Every time the screen is resized the draw info is updated with the new information about the window size.
+ *
+ * Every wave has its own drawInfo.
+ *
+ */ 
 class DrawInfo
 {
 public:
 
+    /**
+     * Constructor. Takes the index of the wave as argument.
+     */ 
     DrawInfo( size_t waveIndex ):
         mWaveIndex( waveIndex ),
         mWindowWidth(0),
@@ -14,6 +24,10 @@ public:
         mShrinkFactor(1)
     {}
 
+    /**
+     * Reset this DrawInfo using the new bounding area for the wave.  \a shrinkFactor 
+     * makes the wave shrink on the y axis with respect to the area. A factor 1 makes the wave as big as the area, whereas a factor >1 makes it shrink.
+     */ 
     void reset( const ci::Area &bounds, float shrinkFactor )
     {
         mWindowWidth = bounds.getWidth();
@@ -22,6 +36,10 @@ public:
         mShrinkFactor = shrinkFactor;
     }
 
+    /**
+     * Maps a value in the audio space [-1.0, 1.0] to a position on the y axis of this DrawInf's bounding area.
+     *
+     */ 
 	float audioToHeigt(float audioSample) const {
         /* clip into range [-1.1] */
         if (audioSample < -1.0f) {
@@ -48,6 +66,9 @@ public:
         return mSelectionBarHeight;
     }
 
+    /**
+     * Returns the center position on the y axis of this DrawInfo's the bounding area. 
+     */ 
     int32_t getWaveCenterY() const
     {
         if ( mWaveIndex == 0 )
@@ -56,14 +77,21 @@ public:
             return mWindowHeight / (NUM_WAVES * 2);
     }
 
+    /**
+     * Flips y according to the index of the wave. It is needed because the second wave in collidoscope is upside down from the orientation oftthe screen.
+     */ 
 	int flipY(int y) const 
     {
         if ( mWaveIndex == 0)
-		    return mWindowHeight - y /*+ 24*/;
+		    return mWindowHeight - y;
         else
-            return y /*- 24*/;
+            return y;
 	}
 
+    /**
+     * Returns x. not used at he moment.
+     *
+     */ 
 	int flipX(int x) const
     {
         return x;
@@ -86,6 +114,9 @@ public:
         return mWindowHeight;
     }
 
+    /**
+     * Draw infos cannot be copied and should be passed as const reference.
+     */ 
     DrawInfo( const DrawInfo &original ) = delete;
     DrawInfo & operator=( const DrawInfo &original ) = delete;
 

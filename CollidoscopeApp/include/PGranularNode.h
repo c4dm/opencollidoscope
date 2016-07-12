@@ -30,12 +30,13 @@ public:
     explicit PGranularNode( ci::audio::Buffer *grainBuffer, CursorTriggerMsgRingBuffer &triggerRingBuffer );
     ~PGranularNode();
 
-    // set selection size in samples 
+    /** Set selection size in samples */
     void setSelectionSize( size_t size )
     {
         mSelectionSize.set( size );
     }
 
+    /** Set selection start in samples */
     void setSelectionStart( size_t start )
     {
         mSelectionStart.set( start );
@@ -46,7 +47,7 @@ public:
         mGrainDurationCoeff.set( coeff );
     }
 
-    // used for trigger callback in PGRanular 
+    /* PGranularNode passes itself as trigger callback in PGranular */
     void operator()( char msgType, int ID );
 
     ci::audio::dsp::RingBufferT<NoteMsg>& getNoteRingBuffer() { return mNoteMsgRingBufferPack.getBuffer(); }
@@ -59,6 +60,8 @@ protected:
 
 private:
 
+    // Wraps a std::atomic but get() returns a boost::optional that is set to a real value only when the atomic has changed. 
+    //  It is used to avoid calling PGranulat setter methods with *  the same value at each audio callback.
     template< typename T>
     class LazyAtomic
     {
@@ -90,17 +93,19 @@ private:
         T mPreviousVal;
     };
 
+    // creates or re-start a PGranular and sets the pitch according to the MIDI note passed as argument
     void handleNoteMsg( const NoteMsg &msg );
 
-    // pointer to PGranular object 
+    // pointers to PGranular objects 
     std::unique_ptr < collidoscope::PGranular<float, RandomGenerator, PGranularNode > > mPGranularLoop;
     std::array<std::unique_ptr < collidoscope::PGranular<float, RandomGenerator, PGranularNode > >, kMaxVoices> mPGranularNotes;
+    // maps midi notes to pgranulars. When a noteOff is received maks sure the right PGranular is turned off
     std::array<int, kMaxVoices> mMidiNotes;
 
     // pointer to the random generator struct passed over to PGranular 
     std::unique_ptr< RandomGenerator > mRandomOffset;
     
-    /* buffer containing the recorder audio, to pass to PGranular in initialize() */
+    // buffer containing the recorder audio, to pass to PGranular in initialize()
     ci::audio::Buffer *mGrainBuffer;
 
     ci::audio::BufferRef mTempBuffer;

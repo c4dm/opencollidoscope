@@ -59,7 +59,6 @@ void PGranularNode::initialize()
 void PGranularNode::process (ci::audio::Buffer *buffer )
 {
     // only update PGranular if the atomic value has changed from the previous time
-
     const boost::optional<size_t> selectionSize = mSelectionSize.get();
     if ( selectionSize ){
         mPGranularLoop->setSelectionSize( *selectionSize );
@@ -112,6 +111,7 @@ void PGranularNode::process (ci::audio::Buffer *buffer )
     }
 }
 
+// Called back when new grnular is triggered of turned off. Sends notification message to graphic thread.
 void PGranularNode::operator()( char msgType, int ID ) {
 
     switch ( msgType ){

@@ -1,6 +1,9 @@
 #pragma once
 
-
+/**
+ * Enumeration of all the possible commands exchanged between audio thread and graphic thread.
+ *
+ */ 
 enum class Command {
     // message carrying info about one chunk of recorder audio. 
     WAVE_CHUNK,
@@ -17,19 +20,24 @@ enum class Command {
     LOOP_OFF
 };
 
-/* Messages sent from the audio thread to the graphic wave. 
-   This includes the wave chunks when the audio is recorder in the buffer and 
-   the cursor position when the grains are reset.
-*/
+/** Message sent from the audio thread to the graphic wave when a new wave is recorded. 
+ *  
+ *  The graphic thread set the chunks of the wave to reflect the level of the recorded audio. 
+ *  The algorithm takes the maximum and minimum value of a group of samples and this becomes the top and bottom of the samples.
+ *  It contains the inde
+ *  the cursor position when the grains are reset.
+ */
 struct RecordWaveMsg
 {
-    Command cmd;
+    Command cmd; // WAVE_CHUNK or WAVE_START
     std::size_t index;
     float arg1;
     float arg2;
 };
 
-
+/**
+ * Utility function to create a new RecordWaveMsg.
+ */ 
 inline RecordWaveMsg makeRecordWaveMsg( Command cmd, std::size_t index, float arg1, float arg2 )
 {
     RecordWaveMsg msg;
@@ -41,13 +49,20 @@ inline RecordWaveMsg makeRecordWaveMsg( Command cmd, std::size_t index, float ar
     return msg;
 }
 
-
+/**
+ * Message sent from the audio thread to the graphic thread when a new grain is triggered in the granular synthesizer. 
+ * This creates a new cursor that travels from the beginning to the end of the selection to graphically represent the evolution of the grain in time. 
+ *
+ */ 
 struct CursorTriggerMsg
 {
-    Command cmd;
+    Command cmd; // TRIGGER_UPDATE or TRIGGER_END
     int synthID;
 };
 
+/**
+ * Utility function to create a new CursorTriggerMsg.
+ */ 
 inline CursorTriggerMsg makeCursorTriggerMsg( Command cmd, std::uint8_t synthID )
 {
     CursorTriggerMsg msg;
@@ -58,13 +73,19 @@ inline CursorTriggerMsg makeCursorTriggerMsg( Command cmd, std::uint8_t synthID 
     return msg;
 }
 
+/**
+ * Message sent from the graphic (main) thread to the audio thread to start a new voice of the granular synthesizer.
+ */ 
 struct NoteMsg
 {
-    Command cmd;
+    Command cmd; // NOTE_ON/OFF ot LOOP_ON/OFF 
     int midiNote;
     double rate;
 };
 
+/**
+ * Utility function to create a new NoteMsg.
+ */ 
 inline NoteMsg makeNoteMsg( Command cmd, int midiNote, double rate )
 {
     NoteMsg msg;
