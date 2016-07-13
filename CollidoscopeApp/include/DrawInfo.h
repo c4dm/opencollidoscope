@@ -1,3 +1,24 @@
+/*
+
+ Copyright (C) 2016  Queen Mary University of London 
+ Author: Fiore Martin
+
+ This file is part of Collidoscope.
+ 
+ Collidoscope is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #pragma once
 
 #include "cinder/Area.h"
@@ -40,7 +61,7 @@ public:
      * Maps a value in the audio space [-1.0, 1.0] to a position on the y axis of this DrawInf's bounding area.
      *
      */ 
-	float audioToHeigt(float audioSample) const {
+    float audioToHeigt(float audioSample) const {
         /* clip into range [-1.1] */
         if (audioSample < -1.0f) {
             audioSample = -1.0f;
@@ -50,11 +71,11 @@ public:
         }
 
         /* map from [-1,1] to [0,1] */
-		float ratio = (audioSample - (-1.0f)) * 0.5f; // 2 = 1 - (-1) 
+        float ratio = (audioSample - (-1.0f)) * 0.5f; // 2 = 1 - (-1) 
 
-		/* get bottom and add the scaled height */
+        /* get bottom and add the scaled height */
         return ratio * mSelectionBarHeight; //remove  bounds.getY1() bound only needed for size of tier
-	}
+    }
 
     float getMaxChunkHeight() const 
     {
@@ -80,22 +101,22 @@ public:
     /**
      * Flips y according to the index of the wave. It is needed because the second wave in collidoscope is upside down from the orientation oftthe screen.
      */ 
-	int flipY(int y) const 
+    int flipY(int y) const 
     {
         if ( mWaveIndex == 0)
-		    return mWindowHeight - y;
+            return mWindowHeight - y;
         else
             return y;
-	}
+    }
 
     /**
      * Returns x. not used at he moment.
      *
      */ 
-	int flipX(int x) const
+    int flipX(int x) const
     {
         return x;
-	}
+    }
 
 
     // how much the wave is shrunk on the y axis with respect to the wave's tier 

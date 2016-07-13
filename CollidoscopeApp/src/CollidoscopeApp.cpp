@@ -1,3 +1,24 @@
+/*
+
+ Copyright (C) 2016  Queen Mary University of London 
+ Author: Fiore Martin
+
+ This file is part of Collidoscope.
+ 
+ Collidoscope is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "cinder/app/App.h"
 #include "cinder/app/RendererGl.h"
 #include "cinder/gl/gl.h"
@@ -22,20 +43,20 @@ using namespace std;
 class CollidoscopeApp : public App {
   public:
 
-	void setup() override;
+    void setup() override;
     void setupGraphics();
 
     void receiveCommands();
 
-	void keyDown( KeyEvent event ) override;
-	void update() override;
-	void draw() override;
+    void keyDown( KeyEvent event ) override;
+    void update() override;
+    void draw() override;
     void resize() override;
 
-	Config mConfig;
+    Config mConfig;
     collidoscope::MIDI mMIDI;
     AudioEngine mAudioEngine;
-	
+    
     array< shared_ptr< Wave >, NUM_WAVES > mWaves;
     array< shared_ptr< DrawInfo >, NUM_WAVES > mDrawInfos;
     array< shared_ptr< Oscilloscope >, NUM_WAVES > mOscilloscopes;
@@ -186,9 +207,9 @@ void CollidoscopeApp::keyDown( KeyEvent event )
     };
         break;
 
-	case 'm' :
-		mAudioEngine.setGrainDurationCoeff(0, 8);
-		break;
+    case 'm' :
+        mAudioEngine.setGrainDurationCoeff(0, 8);
+        break;
 
     case 'n': {
         mAudioEngine.setGrainDurationCoeff( 0, 1 );
@@ -293,7 +314,7 @@ void CollidoscopeApp::update()
 
 void CollidoscopeApp::draw()
 {
-	gl::clear( Color( 0, 0, 0 ) );
+    gl::clear( Color( 0, 0, 0 ) );
 
     for ( int i = 0; i < NUM_WAVES; i++ ){
         if ( i == 1 ){
@@ -388,7 +409,7 @@ void CollidoscopeApp::receiveCommands()
                 mWaves[waveIdx]->getSelection().setSize( numSelectionChunks );
 
                 // how many samples in one selection ?
-				size_t selectionSize = mWaves[waveIdx]->getSelection().getSize() * (mConfig.getWaveLen() * mAudioEngine.getSampleRate() / mConfig.getNumChunks());
+                size_t selectionSize = mWaves[waveIdx]->getSelection().getSize() * (mConfig.getWaveLen() * mAudioEngine.getSampleRate() / mConfig.getNumChunks());
                 mAudioEngine.setSelectionSize( waveIdx, selectionSize );
 
             };

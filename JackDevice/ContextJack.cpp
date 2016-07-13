@@ -1,25 +1,48 @@
 /*
- Copyright (c) 2015, The Cinder Project
 
- This code is intended to be used with the Cinder C++ library, http://libcinder.org
+ Copyright (C) 2016  Queen Mary University of London 
+ Author: Fiore Martin
 
- Redistribution and use in source and binary forms, with or without modification, are permitted provided that
- the following conditions are met:
+ This file is part of Collidoscope.
+ 
+ Collidoscope is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+ This file incorporates work covered by the following copyright and permission notice: 
+
+    Copyright (c) 2014, The Cinder Project
+
+    This code is intended to be used with the Cinder C++ library, http://libcinder.org
+
+    Redistribution and use in source and binary forms, with or without modification, are permitted provided that
+    the following conditions are met:
 
     * Redistributions of source code must retain the above copyright notice, this list of conditions and
-	the following disclaimer.
+    the following disclaimer.
     * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and
-	the following disclaimer in the documentation and/or other materials provided with the distribution.
+    the following disclaimer in the documentation and/or other materials provided with the distribution.
 
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
- WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
- ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
- TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- POSSIBILITY OF SUCH DAMAGE.
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+    WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+    PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+    ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+    TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
+ 
 */
+
 
 #include "cinder/audio/linux/ContextJack.h"
 #include "cinder/audio/Exception.h"
@@ -60,50 +83,50 @@ inline void copyFromJackPort(jack_port_t *port, float *dest, jack_nframes_t nfra
 int OutputDeviceNodeJack::jackCallback(jack_nframes_t nframes, void* userData)
 {
     // retrieve user data 
-	RenderData *renderData = static_cast<RenderData *>( userData );
+    RenderData *renderData = static_cast<RenderData *>( userData );
 
-	OutputDeviceNodeJack *outputDeviceNode = static_cast<OutputDeviceNodeJack *>( renderData->outputNode );
+    OutputDeviceNodeJack *outputDeviceNode = static_cast<OutputDeviceNodeJack *>( renderData->outputNode );
 
-	auto ctx = renderData->outputNode->getContext();
-	if( ! ctx ) {
+    auto ctx = renderData->outputNode->getContext();
+    if( ! ctx ) {
         // this is from some cinder library code but it should not happen in Collidoscope as the context is set
         for( size_t chan = 0; chan < 2; chan++)
-		    zeroJackPort( outputDeviceNode->mOutputPorts[chan], nframes );
+            zeroJackPort( outputDeviceNode->mOutputPorts[chan], nframes );
 
-		return 0;
-	}
+        return 0;
+    }
 
-	std::lock_guard<std::mutex> lock( ctx->getMutex() );
+    std::lock_guard<std::mutex> lock( ctx->getMutex() );
     
-	// verify associated context still exists, which may not be true if we blocked in ~Context() and were then deallocated.
-	ctx = renderData->outputNode->getContext();
-	if( ! ctx ) {
+    // verify associated context still exists, which may not be true if we blocked in ~Context() and were then deallocated.
+    ctx = renderData->outputNode->getContext();
+    if( ! ctx ) {
 
         for( size_t chan = 0; chan < 2; chan++)
-		    zeroJackPort( outputDeviceNode->mOutputPorts[chan], nframes );
+            zeroJackPort( outputDeviceNode->mOutputPorts[chan], nframes );
 
-		return 0;
-	}
+        return 0;
+    }
 
 
-	Buffer *internalBuffer = outputDeviceNode->getInternalBuffer();
-	internalBuffer->zero();
+    Buffer *internalBuffer = outputDeviceNode->getInternalBuffer();
+    internalBuffer->zero();
 
-	ctx->preProcess();
+    ctx->preProcess();
     // process the whole audio graph using by recursively pulling the input all the way to the top of the graph 
-	outputDeviceNode->pullInputs( internalBuffer );
+    outputDeviceNode->pullInputs( internalBuffer );
     
-	// if clip detection is enabled and buffer clipped, silence it
-	//if( outputDeviceNode->checkNotClipping() ){
+    // if clip detection is enabled and buffer clipped, silence it
+    //if( outputDeviceNode->checkNotClipping() ){
         //for( size_t chan = 0; chan < 2; chan++)
-		//    zeroJackPort( outputDeviceNode->mOutputPorts[chan], nframes );
-	//} 
+        //    zeroJackPort( outputDeviceNode->mOutputPorts[chan], nframes );
+    //} 
     //else {
         for( size_t chan = 0; chan < 2; chan++)
             copyToJackPort( outputDeviceNode->mOutputPorts[chan], internalBuffer->getChannel( chan ), nframes  );
     //}
 
-	ctx->postProcess();
+    ctx->postProcess();
 
     return 0;
 }
@@ -181,38 +204,38 @@ void OutputDeviceNodeJack::initialize()
 
     // connect input ports to physical device (microphones)
     const char **mikePorts = jack_get_ports (mClient, NULL, NULL,
-		JackPortIsPhysical|JackPortIsOutput);
+        JackPortIsPhysical|JackPortIsOutput);
 
-	if (mikePorts == NULL) {
+    if (mikePorts == NULL) {
         throw cinder::audio::AudioContextExc("no physical input ports available");
-	}
+    }
 
-	if (jack_connect (mClient,  mikePorts[0], jack_port_name (mInputDeviceNode->mInputPorts[0]))) {
+    if (jack_connect (mClient,  mikePorts[0], jack_port_name (mInputDeviceNode->mInputPorts[0]))) {
         throw cinder::audio::AudioContextExc("cannot connect input port 0");
-	}
+    }
 
-	if (jack_connect (mClient, mikePorts[1], jack_port_name( mInputDeviceNode->mInputPorts[1]) )) {
+    if (jack_connect (mClient, mikePorts[1], jack_port_name( mInputDeviceNode->mInputPorts[1]) )) {
         throw cinder::audio::AudioContextExc("cannot connect input port 1");
-	}
+    }
 
     // connect output ports to physical device (audio out )
     const char **speakerPorts = jack_get_ports (mClient, NULL, NULL,
-				JackPortIsPhysical|JackPortIsInput);
+                JackPortIsPhysical|JackPortIsInput);
 
-	if (speakerPorts == NULL) {
+    if (speakerPorts == NULL) {
         throw cinder::audio::AudioContextExc("no physical output ports available");
-	}
+    }
 
-	if (jack_connect (mClient, jack_port_name (mOutputPorts[0]), speakerPorts[0])) {
+    if (jack_connect (mClient, jack_port_name (mOutputPorts[0]), speakerPorts[0])) {
         throw cinder::audio::AudioContextExc("cannot connect output port 0");
-	}
+    }
 
-	if (jack_connect (mClient, jack_port_name (mOutputPorts[1]), speakerPorts[1])) {
+    if (jack_connect (mClient, jack_port_name (mOutputPorts[1]), speakerPorts[1])) {
         throw cinder::audio::AudioContextExc("cannot connect output port 1");
-	}
+    }
 
-	jack_free( mikePorts );
-	jack_free( speakerPorts );
+    jack_free( mikePorts );
+    jack_free( speakerPorts );
 }
 
 
@@ -266,9 +289,9 @@ void InputDeviceNodeJack::process( Buffer *buffer )
 
 //-------------------------------------------ContextJack-----------------------------------------------------------
 
-OutputDeviceNodeRef	ContextJack::createOutputDeviceNode( const DeviceRef &device, const Node::Format &format )
+OutputDeviceNodeRef ContextJack::createOutputDeviceNode( const DeviceRef &device, const Node::Format &format )
 {
-	
+    
     if( mOutputDeviceNode  == nullptr ) {
         auto thisRef = std::static_pointer_cast<ContextJack>( shared_from_this() );
 
@@ -283,7 +306,7 @@ OutputDeviceNodeRef	ContextJack::createOutputDeviceNode( const DeviceRef &device
         }
     }
 
-	return mOutputDeviceNode;
+    return mOutputDeviceNode;
 }
 
 InputDeviceNodeRef ContextJack::createInputDeviceNode( const DeviceRef &device, const Node::Format &format  )
@@ -302,7 +325,7 @@ InputDeviceNodeRef ContextJack::createInputDeviceNode( const DeviceRef &device, 
         }
     }
 
-	return mInputDeviceNode;
+    return mInputDeviceNode;
 }
 
 

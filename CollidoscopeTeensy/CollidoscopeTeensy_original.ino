@@ -1,25 +1,38 @@
-
 /******************************************************************************
-
- *  Ben Bengler
- *  mail@benbengler.com
- *  02.05.2016
+ *  Copyright (C) 2015  Ben Bengler (mail@benbengler.com)
+ *  Copyright (C) 2016  Queen Mary University of London 
+ *  Authors: Ben Bengler, Fiore Martin
  *
- *  Collidoscope 
+ *  This file is part of Collidoscope.
+ *
+ *  Collidoscope is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *  
+ ****************************************************************************
+ *
  *  Teensy 2 ++ pinout: https://www.pjrc.com/teensy/card4b.pdf
  *  
  *  ANALOG INPUTS:
  *  Wavejet   -> F0 (38) [Horizontal rail 1]
  *  Wavejet   -> F1 (39) [Horizontal rail 2]
- *  Filter 1  -> F2 (40) [Vertical rail 1]
- *  Filter 2  -> F4 (42) [Vertical rail 2] 
+ *  Filter 1  -> F2 (40) [Fader with moon/sun 1]
+ *  Filter 2  -> F4 (42) [Fader with moon/sun 2] 
+ *  Duration 1-> F3 (41) [Fader with grains 1]
+ *  Duration 2-> F5 (43) [Fader with grains 2]
  *
  *  DIGITAL INPUTS [INTERRUPTS]:
  *  Sel. length 1  -> INT0/INT1 (0, 1)  [Encoder 1]
- *  Sel. length 2  -> INT2/INT3 (2, 3)  [Encoder 2]
- *  Duration 1     -> INT4/INT5 (36, 37)[Encoder 3] 
- *  Duration 2     -> INT6/INT7 (18, 19)[Encoder 4] 
+ *  Sel. length 2  -> INT2/INT3 (2, 3)  [Encoder 2] 
  *
  *  DIGITAL INPUTS:
  *  Play1 toggle  -> B0 (20)
@@ -30,7 +43,7 @@
  *  DIGITAL OUTPUTS:
  *  Record Button 1 Led -> D4 (4)
  *  Record Button 2 Led -> D5 (5)
-
+ *
  ******************************************************************************/ 
 
 
@@ -47,14 +60,12 @@ const int cc_duration = 2;  // MIDI cc controlling duration
 const int cc_filter = 7;    // MIDI cc controlling LP filter
 const int cc_play = 4;      // MIDI cc controlling PLAY
 const int cc_record = 5;    // MIDI cc controlling RECORD
-//const int cc_reset = 100; // MIDI cc controlling instrument RESET
+
 
 ///////////////////////////////////////////////////
 //Default Values:
 const int  Enc_def = 64; //default selection length  
 int MIDI_led_state = LOW;
-//boolean reset1 = true;
-//boolean reset2 = true;
 
 ///////////////////////////////////////////////////
 // Interface Inputs
@@ -166,28 +177,24 @@ void loop() {
  //Loop/Keymode Switch Instrument 1 
    
  if (button1.risingEdge()) {   
-   //Serial.println("Loop mode");
    usbMIDI.sendControlChange(cc_play, 1, midi_chan_inst1);
  }
    
  if (button1.fallingEdge()) {   
-   //Serial.println("Keyboardmode mode");
    usbMIDI.sendControlChange(cc_play, 0, midi_chan_inst1);
  }
      
    
  //Record Instrument 1
  if (button2.fallingEdge()) {   
-   //Serial.println("RECORD! Instrument 1");
    usbMIDI.sendControlChange(cc_record, 1, midi_chan_inst1);
  }
 
  //send MIDI Wavejet 1 [Position Instrument 1]
- 
+   //Serial.print("W1>"); Serial.println(Jet1_new);
  if (Jet1_new > Jet1_old+jitter_thresh || Jet1_new < Jet1_old-jitter_thresh) {
-    
-    int16_t midiVal = constrain( map(Jet1_new, 24, 926, 0, 149), 0, 149 );
-    // int16_t midiVal = constrain( map( Jet1_new, 23, 928, 0, 149 ), 0, 149 ); old collidoscope 
+    //int16_t midiVal = constrain( map(Jet1_new, 24, 926, 0, 149), 0, 149 );
+    int16_t midiVal = constrain( map(Jet1_new, 18, 800, 0, 149), 0, 149 );
     if( midiVal != Jet1_old_MIDI ){
       Jet1_old_MIDI = midiVal;
       usbMIDI.sendPitchBend( midiVal, midi_chan_inst1 );
@@ -199,8 +206,7 @@ void loop() {
 
 
  //send MIDI Filter 1 [Filter Instrument 1]
-
- if ( filter1_new != filter1_old ) {         // maybe adding jitter threshold needed, see Jet1_new  
+ if ( filter1_new != filter1_old ) {
 
     int16_t midiVal = constrain( map(filter1_new, 0, 1024, 0, 127), 0, 127 );
     if( midiVal != filter1_old_MIDI){
@@ -213,7 +219,7 @@ void loop() {
     digitalWrite(Pin_MIDIled, HIGH);
   }
 
-  if ( dur1_new != dur1_old ) {         // maybe adding jitter threshold needed, see Jet1_new  
+  if ( dur1_new != dur1_old ) {
  
     int16_t midiVal = constrain( map(dur1_new, 0, 1024, 0, 127), 0, 127 );
     if( midiVal != dur1_old_MIDI){
@@ -242,26 +248,23 @@ void loop() {
   //Loop/Keymode Switch Instrument 2
    
   if (button3.risingEdge()) {   
-    //Serial.println("Loop mode");
     usbMIDI.sendControlChange(cc_play, 1, midi_chan_inst2);
   }
   
   if (button3.fallingEdge()) {   
-    //Serial.println("Keyboardmode mode");
     usbMIDI.sendControlChange(cc_play, 0, midi_chan_inst2);
   }
   
   //Record Instrument 2
   if (button4.fallingEdge()) {   
-    //Serial.println("RECORD! Instrument 2");
     usbMIDI.sendControlChange(cc_record, 1, midi_chan_inst2);
   }
 
   //send MIDI Wavejet 2 [Position Instrument 2]
-  
+  // Serial.print("W2>"); Serial.println(Jet2_new);
   if (Jet2_new > Jet2_old+jitter_thresh || Jet2_new < Jet2_old-jitter_thresh) {
-    //Serial.println("RECORD! Instrument 2");
-    int16_t midiVal = constrain( map( Jet2_new, 925, 18, 149, 0 ), 0, 149 );
+    //int16_t midiVal = constrain( map( Jet2_new, 925, 18, 149, 0 ), 0, 149 );
+    int16_t midiVal = constrain( map( Jet2_new, 15, 780, 0, 149 ), 0, 149 );
     if( midiVal != Jet2_old_MIDI ){
       Jet2_old_MIDI = midiVal;
       usbMIDI.sendPitchBend( midiVal, midi_chan_inst2 );
@@ -271,8 +274,7 @@ void loop() {
     digitalWrite(Pin_MIDIled, HIGH);
   }
   
- //Serial.println(filter2_new);
-   if ( filter2_new != filter2_old ) {         // maybe adding jitter threshold needed, see Jet1_new  
+   if ( filter2_new != filter2_old ) {
     int16_t midiVal = constrain( map(filter2_new, 0, 1024, 0, 127), 0, 127 );
     if( midiVal != filter2_old_MIDI){
       //Serial.println( midiVal );
@@ -284,7 +286,7 @@ void loop() {
     digitalWrite(Pin_MIDIled, HIGH);
    }
 
-   if ( dur2_new != dur2_old ) {         // maybe adding jitter threshold needed, see Jet1_new  
+   if ( dur2_new != dur2_old ) {
     int16_t midiVal = constrain( map(dur2_new, 0, 1024, 0, 127), 0, 127 );
     if( midiVal != dur2_old_MIDI){
       //Serial.println( midiVal );
@@ -300,8 +302,6 @@ void loop() {
   //send MIDI Encoder 2 [Selection length Instrument 2]
   if (Enc2_new != Enc2_old) {
     Enc2_old = Enc2_new;
-    //Serial.println("Encoder 2: ");
-    //Serial.println(Enc2_new);
     usbMIDI.sendControlChange(cc_length, Enc2_new, midi_chan_inst2);
     digitalWrite(Pin_MIDIled, HIGH);
   }

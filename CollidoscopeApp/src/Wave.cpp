@@ -1,3 +1,26 @@
+/*
+
+ Copyright (C) 2015  Fiore Martin
+ Copyright (C) 2016  Queen Mary University of London 
+ Author: Fiore Martin
+
+ This file is part of Collidoscope.
+ 
+ Collidoscope is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+*/
+
 #include "Wave.h"
 #include "DrawInfo.h"
 
@@ -6,15 +29,15 @@ using namespace ci;
 
 Wave::Wave( size_t numChunks, Color selectionColor ):
     mNumChunks( numChunks ),
-	mSelection( this, selectionColor ),
-	mColor(Color(0.5f, 0.5f, 0.5f)),
+    mSelection( this, selectionColor ),
+    mColor(Color(0.5f, 0.5f, 0.5f)),
     mFilterCoeff( 1.0f )
 {
-	mChunks.reserve( numChunks );
+    mChunks.reserve( numChunks );
 
-	for ( size_t i = 0; i < numChunks; i++ ){
-		mChunks.emplace_back( i );
-	}
+    for ( size_t i = 0; i < numChunks; i++ ){
+        mChunks.emplace_back( i );
+    }
 
     // init cinder batch drawing
     auto lambert = gl::ShaderDef().color();
@@ -24,27 +47,27 @@ Wave::Wave( size_t numChunks, Color selectionColor ):
 
 void Wave::reset( bool onlyChunks )
 {
-	for (size_t i = 0; i < getSize(); i++){
-		mChunks[i].reset();
-	}
+    for (size_t i = 0; i < getSize(); i++){
+        mChunks[i].reset();
+    }
 
-	if (onlyChunks)
-		return;
+    if (onlyChunks)
+        return;
 
-	mSelection.setToNull();
+    mSelection.setToNull();
 }
 
 
 void Wave::setChunk(size_t index, float bottom, float top)
 {
-	Chunk &c = mChunks[index];
-	c.setTop(top);
-	c.setBottom(bottom);
+    Chunk &c = mChunks[index];
+    c.setTop(top);
+    c.setBottom(bottom);
 }
 
 inline const Chunk & Wave::getChunk(size_t index)
 {
-	return mChunks[index];
+    return mChunks[index];
 }
 
 void Wave::update( double secondsPerChunk, const DrawInfo& di ) {
@@ -89,30 +112,30 @@ void Wave::update( double secondsPerChunk, const DrawInfo& di ) {
 void Wave::draw( const DrawInfo& di ){
 
 
-	/* ########### draw the particles ########## */
+    /* ########### draw the particles ########## */
 #ifdef USE_PARTICLES
-	mParticleController.draw();
+    mParticleController.draw();
 #endif
 
-	/* ########### draw the wave ########## */
-	/* scale the wave to fit the window */
-	gl::pushModelView(); 
+    /* ########### draw the wave ########## */
+    /* scale the wave to fit the window */
+    gl::pushModelView(); 
 
-	
-	const float wavePixelLen =  ( mNumChunks * ( 2 + Chunk::kWidth ) );
-	/* scale the x-axis for the wave to fit the window precisely */
-	gl::scale( ((float)di.getWindowWidth() ) / wavePixelLen , 1.0f);
-	/* draw the chunks */
-	if (mSelection.isNull()){
-		/* no selection: all chunks the same color */
-		gl::color(mColor); 
-		for (size_t i = 0; i < getSize(); i++){
-			mChunks[i].draw( di, mChunkBatch );
-		}
-	}
+    
+    const float wavePixelLen =  ( mNumChunks * ( 2 + Chunk::kWidth ) );
+    /* scale the x-axis for the wave to fit the window precisely */
+    gl::scale( ((float)di.getWindowWidth() ) / wavePixelLen , 1.0f);
+    /* draw the chunks */
+    if (mSelection.isNull()){
+        /* no selection: all chunks the same color */
+        gl::color(mColor); 
+        for (size_t i = 0; i < getSize(); i++){
+            mChunks[i].draw( di, mChunkBatch );
+        }
+    }
     else{ 
         // Selection not null 
-		gl::color(this->mColor); 
+        gl::color(this->mColor); 
 
         // update the array with cursor positions 
         mCursorsPos.clear();
@@ -120,48 +143,48 @@ void Wave::draw( const DrawInfo& di ){
             mCursorsPos.push_back( cursor.second.pos );
         }
 
-		gl::enableAlphaBlending();
+        gl::enableAlphaBlending();
 
-		const float selectionAlpha = 0.5f + mFilterCoeff * 0.5f;
+        const float selectionAlpha = 0.5f + mFilterCoeff * 0.5f;
 
 
-		for (size_t i = 0; i < getSize(); i++){
-			/* when in selection use selection color */
-			
-			if (i == mSelection.getStart()){
-				/* draw the selection bar with a transparent selection color */
-				gl::color(mSelection.getColor().r, mSelection.getColor().g, mSelection.getColor().b, 0.5f);
+        for (size_t i = 0; i < getSize(); i++){
+            /* when in selection use selection color */
+            
+            if (i == mSelection.getStart()){
+                /* draw the selection bar with a transparent selection color */
+                gl::color(mSelection.getColor().r, mSelection.getColor().g, mSelection.getColor().b, 0.5f);
                 mChunks[i].drawBar( di, mChunkBatch );
 
-				/* set the color to the selection */
-				gl::color(mSelection.getColor().r, mSelection.getColor().g, mSelection.getColor().b, selectionAlpha);
-			}
+                /* set the color to the selection */
+                gl::color(mSelection.getColor().r, mSelection.getColor().g, mSelection.getColor().b, selectionAlpha);
+            }
 
             // check if one of the cursors is positioned in this chunk  
-			if (std::find(mCursorsPos.begin(), mCursorsPos.end(),i) != mCursorsPos.end() ){
-				gl::color(CURSOR_CLR);
-				mChunks[i].draw( di, mChunkBatch );
-				gl::color(mSelection.getColor().r, mSelection.getColor().g, mSelection.getColor().b, selectionAlpha);
-			}
-			else{
-				/* just draw with current color */
-				mChunks[i].draw( di, mChunkBatch );
-			}
-			
-			/* exit selection: go back to wave color */
-			if (i == mSelection.getEnd()){
-				/* draw the selection bar with a transparent selection color */
-				gl::color(mSelection.getColor().r, mSelection.getColor().g, mSelection.getColor().b, 0.5f);
+            if (std::find(mCursorsPos.begin(), mCursorsPos.end(),i) != mCursorsPos.end() ){
+                gl::color(CURSOR_CLR);
+                mChunks[i].draw( di, mChunkBatch );
+                gl::color(mSelection.getColor().r, mSelection.getColor().g, mSelection.getColor().b, selectionAlpha);
+            }
+            else{
+                /* just draw with current color */
+                mChunks[i].draw( di, mChunkBatch );
+            }
+            
+            /* exit selection: go back to wave color */
+            if (i == mSelection.getEnd()){
+                /* draw the selection bar with a transparent selection color */
+                gl::color(mSelection.getColor().r, mSelection.getColor().g, mSelection.getColor().b, 0.5f);
                 mChunks[i].drawBar( di, mChunkBatch );
-				/* set the colo to the wave */
-				gl::color(this->mColor);  
-			}
-		}
-		gl::disableAlphaBlending();
-	}
-	
+                /* set the colo to the wave */
+                gl::color(this->mColor);  
+            }
+        }
+        gl::disableAlphaBlending();
+    }
+    
 
-	gl::popModelView();
+    gl::popModelView();
 
 }
 
@@ -180,16 +203,16 @@ Wave::Selection::Selection(Wave * w, Color color) :
 
 void Wave::Selection::setStart(size_t start)  {
 
-	/* deselect the previous */
+    /* deselect the previous */
     mWave->mChunks[mSelectionStart].setAsSelectionStart( false );
-	/* select the next */
+    /* select the next */
     mWave->mChunks[start].setAsSelectionStart( true );
-	
-	mNull = false;
+    
+    mNull = false;
 
     size_t size = getSize();
 
-	mSelectionStart = start;
+    mSelectionStart = start;
     mSelectionEnd = start + size - 1;
     if ( mSelectionEnd > mWave->getSize() - 1 )
         mSelectionEnd = mWave->getSize() - 1;
@@ -210,14 +233,14 @@ void Wave::Selection::setSize(size_t size)  {
         size = mWave->mNumChunks - mSelectionStart - 1;
     }
 
-	/* deselect the previous */
+    /* deselect the previous */
     mWave->mChunks[mSelectionEnd].setAsSelectionEnd( false );
 
     mSelectionEnd = mSelectionStart + size;
-	/* select the next */
+    /* select the next */
     mWave->mChunks[mSelectionEnd].setAsSelectionEnd( true );
 
-	mNull = false;
+    mNull = false;
 }
 
 

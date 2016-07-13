@@ -1,3 +1,26 @@
+/*
+
+ Copyright (C) 2015  Fiore Martin
+ Copyright (C) 2016  Queen Mary University of London 
+ Author: Fiore Martin
+
+ This file is part of Collidoscope.
+ 
+ Collidoscope is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+*/
+
 
 #pragma once
 
@@ -26,7 +49,7 @@ public:
     /**
      * Constructor, takes as argument the index of this chunk in the wave
      */ 
-	Chunk( size_t index );
+    Chunk( size_t index );
 
     /**
      * Sets the top value of this chunk. The value is passed in audio coordinates : [-1.0, 1.0]
@@ -49,9 +72,9 @@ public:
      * Reset this chunks. When a chunk is reset it starts shrinking until it disappears.
      *
      */ 
-	void reset(){
-		mResetting = true;
-	}
+    void reset(){
+        mResetting = true;
+    }
 
     /**
      * Called in the graphic loop. It update this chunk. 
@@ -72,16 +95,16 @@ public:
     /**
      * Informs this chunk that it's the first chunk of the selection.
      */ 
-	void setAsSelectionStart(bool start){
-		isSelectionStart = start;
-	}
+    void setAsSelectionStart(bool start){
+        isSelectionStart = start;
+    }
 
     /**
      * Informs this chunk that it's the last chunk of the selection.
      */ 
-	void setAsSelectionEnd(bool end){
-		isSelectionEnd = end;
-	}
+    void setAsSelectionEnd(bool end){
+        isSelectionEnd = end;
+    }
 
 private:
 
