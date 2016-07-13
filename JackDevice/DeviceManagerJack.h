@@ -27,6 +27,12 @@
 
 namespace cinder { namespace audio { namespace linux {
 
+/**
+ * DeviceManager ( as in cinder::audio::DeviceManager ) that handle the hardware device through the jack library.
+ * Note that this is not suitable for general purpose use. Most of the functionalities are indeed hard coded
+ * just to suit Collidoscope needs. In particular only two input and two output ports are assumed. 
+ *
+ */ 
 class DeviceManagerJack : public DeviceManager {
   public:
 

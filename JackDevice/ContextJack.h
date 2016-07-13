@@ -31,10 +31,16 @@ namespace cinder { namespace audio { namespace linux {
 class ContextJack;
 class InputDeviceNodeJack;
 
+/**
+ * OutputNode (as in the cinder::audio::OutputNode) that sends audio to the sound card using the jack audio callback method. 
+ */ 
 class OutputDeviceNodeJack : public OutputDeviceNode {
   public:
 	OutputDeviceNodeJack( const DeviceRef &device, const Format &format, const std::shared_ptr<ContextJack> &context );
 
+    /** Gives this output node a reference to the JackInputNode. 
+     *  In initialize() the reference is used to give the input node access to jack input ports 
+     */
     void setInput(InputDeviceNodeRef inputDeviceNode);
 
   protected:
@@ -45,11 +51,15 @@ class OutputDeviceNodeJack : public OutputDeviceNode {
 	bool supportsProcessInPlace() const	override	{ return false; }
 
   private:
+    // this is called by jack in the audio thread at every tick of the sound card 
     static int jackCallback(jack_nframes_t nframes, void* userData);
 
 
 	void renderToBufferFromInputs();
 
+    /**
+     * RenderData is passed as user_data to jack when the jack process callback is installed
+     */ 
     struct RenderData{
         RenderData() : inputNode(nullptr), outputNode(nullptr), context(nullptr){}
         ~RenderData() { inputNode = nullptr; outputNode = nullptr;  context = nullptr; }
@@ -67,6 +77,9 @@ class OutputDeviceNodeJack : public OutputDeviceNode {
     std::shared_ptr<InputDeviceNodeJack> mInputDeviceNode;
 };
 
+/**
+ * InputNode (as in the cinder::audio::OutputNode) that reads audio from the sound card using the jack audio callback method. 
+ */ 
 class InputDeviceNodeJack : public InputDeviceNode {
   friend OutputDeviceNodeJack;
 
@@ -86,8 +99,8 @@ class InputDeviceNodeJack : public InputDeviceNode {
 
 class ContextJack : public Context {
   public:
-	ContextJack();
-	virtual ~ContextJack();
+	ContextJack() {}
+	virtual ~ContextJack() {}
     
 
 	OutputDeviceNodeRef	createOutputDeviceNode( const DeviceRef &device, const Node::Format &format = Node::Format() ) override;
@@ -101,3 +114,4 @@ class ContextJack : public Context {
 };	
 
 } } } // namespace cinder::audio::linux
+

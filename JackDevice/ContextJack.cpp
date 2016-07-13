@@ -26,23 +26,28 @@
 
 namespace cinder { namespace audio { namespace linux {
 
+
+
+//--------------------------------------static utilities------------------------------------------
+
 inline void zeroJackPort( jack_port_t *port, jack_nframes_t nframes )
 {   
+  // FIXME seg fault at shutdown 
   // memset(port, 0, sizeof(jack_default_audio_sample_t) * nframes); 
 }
 
+// copy audio from node buffer to jack port 
 inline void copyToJackPort(jack_port_t *port, float *source, jack_nframes_t nframes )
 {
-    // dest, source, n 
     jack_default_audio_sample_t *out;
     out = (jack_default_audio_sample_t *) jack_port_get_buffer( port, nframes );
 
     memcpy( out, source, sizeof(jack_default_audio_sample_t) * nframes ) ;
 }
 
+// copy audio from jack port to  node buffer
 inline void copyFromJackPort(jack_port_t *port, float *dest, jack_nframes_t nframes )
 {
-    // dest, source, n 
     jack_default_audio_sample_t *in;
     in = (jack_default_audio_sample_t *) jack_port_get_buffer( port, nframes );
 
@@ -50,16 +55,19 @@ inline void copyFromJackPort(jack_port_t *port, float *dest, jack_nframes_t nfra
 }
 
 
+// -------------------------------OutputDeviceNodeJack-------------------------------------------
+
 int OutputDeviceNodeJack::jackCallback(jack_nframes_t nframes, void* userData)
 {
+    // retrieve user data 
 	RenderData *renderData = static_cast<RenderData *>( userData );
 
 	OutputDeviceNodeJack *outputDeviceNode = static_cast<OutputDeviceNodeJack *>( renderData->outputNode );
 
 	auto ctx = renderData->outputNode->getContext();
 	if( ! ctx ) {
+        // this is from some cinder library code but it should not happen in Collidoscope as the context is set
         for( size_t chan = 0; chan < 2; chan++)
-            // FIXME segfault at shutdown 
 		    zeroJackPort( outputDeviceNode->mOutputPorts[chan], nframes );
 
 		return 0;
@@ -82,17 +90,18 @@ int OutputDeviceNodeJack::jackCallback(jack_nframes_t nframes, void* userData)
 	internalBuffer->zero();
 
 	ctx->preProcess();
+    // process the whole audio graph using by recursively pulling the input all the way to the top of the graph 
 	outputDeviceNode->pullInputs( internalBuffer );
     
 	// if clip detection is enabled and buffer clipped, silence it
-	if( false && outputDeviceNode->checkNotClipping() ){
-        for( size_t chan = 0; chan < 2; chan++)
-		    zeroJackPort( outputDeviceNode->mOutputPorts[chan], nframes );
-	} 
-    else {
+	//if( outputDeviceNode->checkNotClipping() ){
+        //for( size_t chan = 0; chan < 2; chan++)
+		//    zeroJackPort( outputDeviceNode->mOutputPorts[chan], nframes );
+	//} 
+    //else {
         for( size_t chan = 0; chan < 2; chan++)
             copyToJackPort( outputDeviceNode->mOutputPorts[chan], internalBuffer->getChannel( chan ), nframes  );
-    }
+    //}
 
 	ctx->postProcess();
 
@@ -103,53 +112,6 @@ inline void OutputDeviceNodeJack::setInput( InputDeviceNodeRef inputDeviceNode)
 {
     mInputDeviceNode = std::static_pointer_cast<InputDeviceNodeJack>(inputDeviceNode);
 }
-
-ContextJack::ContextJack()
-{
-
-}
-
-ContextJack::~ContextJack()
-{
-
-}
-
-
-OutputDeviceNodeRef	ContextJack::createOutputDeviceNode( const DeviceRef &device, const Node::Format &format )
-{
-	
-    if( mOutputDeviceNode  == nullptr ) {
-        auto thisRef = std::static_pointer_cast<ContextJack>( shared_from_this() );
-
-        mOutputDeviceNode = makeNode( new OutputDeviceNodeJack( device, Node::Format().channels(2), thisRef ) ) ;
-
-        if( mInputDeviceNode != nullptr){
-            auto castedOutputDeviceNode = std::static_pointer_cast<OutputDeviceNodeJack>( mOutputDeviceNode );
-            castedOutputDeviceNode->setInput( mInputDeviceNode );   
-        }
-    }
-
-	return mOutputDeviceNode;
-}
-
-InputDeviceNodeRef ContextJack::createInputDeviceNode( const DeviceRef &device, const Node::Format &format  )
-{
-    if( mInputDeviceNode  == nullptr ) {
-        auto thisRef = std::static_pointer_cast<ContextJack>( shared_from_this() );
-
-        mInputDeviceNode = makeNode( new InputDeviceNodeJack( device, Node::Format().channels(2), thisRef ) ) ;
-
-        if( mOutputDeviceNode != nullptr){
-            auto castedOutputDeviceNode = std::static_pointer_cast<OutputDeviceNodeJack>( mOutputDeviceNode );
-            castedOutputDeviceNode->setInput( mInputDeviceNode );   
-        }
-    }
-
-	return mInputDeviceNode;
-}
-
-
-// OutputDeviceNodeJack 
 
 OutputDeviceNodeJack::OutputDeviceNodeJack( const DeviceRef &device, const Format &format, const std::shared_ptr<ContextJack> &context ):
     OutputDeviceNode( device, format),
@@ -165,7 +127,7 @@ void OutputDeviceNodeJack::initialize()
     jack_options_t options = JackNullOption;
     jack_status_t status;
 
-    // connect to JAck server 
+    // connect to Jack server 
     mClient = jack_client_open (client_name, options, &status, server_name);
     if( mClient == NULL){
 
@@ -177,6 +139,7 @@ void OutputDeviceNodeJack::initialize()
     }
 
     
+    // prepare user data for callback 
     mRenderData.outputNode = this;
     mRenderData.inputNode = mInputDeviceNode.get();
     CI_ASSERT(mInputDeviceNode != nullptr);
@@ -201,7 +164,7 @@ void OutputDeviceNodeJack::initialize()
         throw cinder::audio::AudioContextExc("no more JACK ports available");
      }
 
-    // setup input ports 
+    // setup input ports. Note that the reference to the input node is used. 
     mInputDeviceNode->mInputPorts[0] = jack_port_register (mClient, "input1",
                        JACK_DEFAULT_AUDIO_TYPE,
                        JackPortIsInput, 0);
@@ -211,7 +174,7 @@ void OutputDeviceNodeJack::initialize()
                        JackPortIsInput, 0);
 
 
-    /* Tell the JACK server that we are ready to roll.  Our callback will start running now. */
+    /* Tell the Jack server that we are ready to roll.  Our callback will start running now. */
     if (jack_activate (mClient)) {
         throw cinder::audio::AudioContextExc("cannot activate client");
     }
@@ -267,7 +230,7 @@ void OutputDeviceNodeJack::disableProcessing()
 }
 
 
-//-------------------------- InputDeviceNodeJack -------------------------------
+//----------------------------------------- InputDeviceNodeJack ---------------------------------------------------
 
 
 InputDeviceNodeJack::InputDeviceNodeJack( const DeviceRef &device, const Format &format, const std::shared_ptr<ContextJack> &context ):
@@ -291,11 +254,59 @@ void InputDeviceNodeJack::disableProcessing()
 {
 }
 
+// This is called when the output node pull all the inputs in the jack callback. 
+// Takes audio interface input from the jack port and copies it in the node buffer
 void InputDeviceNodeJack::process( Buffer *buffer )
 {
     for( size_t chan = 0; chan < 2; chan++){
        copyFromJackPort(mInputPorts[chan], buffer->getChannel( chan ), buffer->getNumFrames() ); 
     }
 }
+
+
+//-------------------------------------------ContextJack-----------------------------------------------------------
+
+OutputDeviceNodeRef	ContextJack::createOutputDeviceNode( const DeviceRef &device, const Node::Format &format )
+{
+	
+    if( mOutputDeviceNode  == nullptr ) {
+        auto thisRef = std::static_pointer_cast<ContextJack>( shared_from_this() );
+
+        mOutputDeviceNode = makeNode( new OutputDeviceNodeJack( device, Node::Format().channels(2), thisRef ) ) ;
+
+        // the output device node must have a reference to input device node. In OutputDeviceNodeJack::initialize() 
+        // the input node is passed the jack input ports that it will use to fetch incoming audio from the audio interface
+        // Whichever node (input or ouput) gets initialized after the other, executes the following block:
+        if( mInputDeviceNode != nullptr){
+            auto castedOutputDeviceNode = std::static_pointer_cast<OutputDeviceNodeJack>( mOutputDeviceNode );
+            castedOutputDeviceNode->setInput( mInputDeviceNode );   
+        }
+    }
+
+	return mOutputDeviceNode;
+}
+
+InputDeviceNodeRef ContextJack::createInputDeviceNode( const DeviceRef &device, const Node::Format &format  )
+{
+    if( mInputDeviceNode  == nullptr ) {
+        auto thisRef = std::static_pointer_cast<ContextJack>( shared_from_this() );
+
+        mInputDeviceNode = makeNode( new InputDeviceNodeJack( device, Node::Format().channels(2), thisRef ) ) ;
+
+        // the output device node must have a reference to input device node. In OutputDeviceNodeJack::initialize() 
+        // the input node is passed the jack input ports that it will use to fetch incoming audio from the audio interface
+        // Whichever node (input or ouput) gets initialized after the other, executes the following block:
+        if( mOutputDeviceNode != nullptr){
+            auto castedOutputDeviceNode = std::static_pointer_cast<OutputDeviceNodeJack>( mOutputDeviceNode );
+            castedOutputDeviceNode->setInput( mInputDeviceNode );   
+        }
+    }
+
+	return mInputDeviceNode;
+}
+
+
+
+
 
 } } } // namespace cinder::audio::linux

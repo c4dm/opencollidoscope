@@ -16,6 +16,7 @@ Wave::Wave( size_t numChunks, Color selectionColor ):
 		mChunks.emplace_back( i );
 	}
 
+    // init cinder batch drawing
     auto lambert = gl::ShaderDef().color();
     gl::GlslProgRef shader = gl::getStockShader( lambert );
     mChunkBatch = gl::Batch::create( geom::Rect( ci::Rectf( 0, 0, Chunk::kWidth, 1 ) ), shader );
@@ -63,9 +64,12 @@ void Wave::update( double secondsPerChunk, const DrawInfo& di ) {
 
         double elapsed = now - itr->second.lastUpdate;
 
+        // A chunk of audio corresponds to a certain time according to sample rate.
+        // Use elapsed time to advance through chunks so that the cursor is animated 
+        // and goes from start to end of the seleciton in the time span of the grain 
         itr->second.pos = mSelection.getStart() + int( elapsed / secondsPerChunk );
 
-        /* check we don't go too far off */
+        // check we don't go too far off 
         if (itr->second.pos > mSelection.getEnd()){
             itr->second.pos = Cursor::kNoPosition;
         }

@@ -10,6 +10,9 @@ ParticleController::ParticleController() :
 mNumParticles( 0 )
 
 {
+    // uses Cinder (and OpenGL) virtual buffer object based drawing
+    // see ParticleSphereCPU example in Cinder library 
+     
     mParticles.assign( kMaxParticles, Particle() );
     mParticlePositions.assign( kMaxParticles, vec2( -1, -1 ) );
 
@@ -20,6 +23,7 @@ mNumParticles( 0 )
 
     auto mesh = gl::VboMesh::create( mParticlePositions.size(), GL_POINTS, { { particleLayout, mParticleVbo } } );
 
+    // creates glsl program to run the batch with 
 #if ! defined( CINDER_GL_ES )
     auto glsl = gl::GlslProg::create( gl::GlslProg::Format()
         .vertex( CI_GLSL( 150,
@@ -70,6 +74,7 @@ mNumParticles( 0 )
 
 void ParticleController::updateParticles()
 {
+    // update the positions of the particles and dispose them if they're reached their timespan
     for ( size_t i = 0; i < mNumParticles; i++ ){
 
         Particle &particle = mParticles[i];
@@ -95,6 +100,8 @@ void ParticleController::updateParticles()
         }
     }
 
+    // Copy particle data onto the GPU.
+	// Map the GPU memory and write over it.
     void *gpuMem = mParticleVbo->mapReplace();
     memcpy( gpuMem, mParticlePositions.data(), mParticlePositions.size() * sizeof( vec2 ) );
     mParticleVbo->unmap();
@@ -102,11 +109,13 @@ void ParticleController::updateParticles()
 
 void ParticleController::addParticles(int amount, const vec2 &initialLocation, const float cloudSize)
 {
+    // reduce the particles liearly to the total number of particles already present 
+    // the more particles aleary present the less particle are added
     int reduction = ci::lmap<int>(mNumParticles, 0, kMaxParticles, 0, kMaxParticleAdd);
     amount -= reduction;
 
     if ( mNumParticles + amount > kMaxParticles ){
-		//return;
+		//a.k.a. return if reached kMaxParticles 
         amount = kMaxParticles - mNumParticles;
 	}
 

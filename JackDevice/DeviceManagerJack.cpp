@@ -32,11 +32,13 @@ namespace cinder { namespace audio { namespace linux {
 DeviceManagerJack::DeviceManagerJack() 
 {
 
+    // hardcoded devices. They are always JackIn and JackOut 
     mDevices.push_back( addDevice("JackIn") );
     mDevices.push_back( addDevice("JackOut") );
 
     jack_status_t status;
     
+    // open a jack client, get info and close
 	jack_client_t *client = jack_client_open ("device info", JackNullOption, &status, NULL);
     if( client == NULL){
 
@@ -73,6 +75,7 @@ DeviceRef DeviceManagerJack::getDefaultInput()
     return mDevices[0];
 }
 
+//hardcoded name same as key 
 std::string DeviceManagerJack::getName( const DeviceRef &device )
 {
     return device->getKey();

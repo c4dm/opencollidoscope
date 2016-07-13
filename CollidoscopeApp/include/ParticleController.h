@@ -10,13 +10,14 @@ class ParticleController {
 
     struct Particle {
 
-        ci::vec2	mCloudCenter;
-        ci::vec2	mVel;
-        float       mCloudSize;
+        ci::vec2	mCloudCenter; // initial positin of the particle 
+        ci::vec2	mVel;         // velocity 
+        float       mCloudSize;   // how big is the area where particle float around. When a particle hits the 
+                                  //   border of the area it gets deflected 
 
-        int			mAge;
-        int			mLifespan;
-        bool        mFlyOver;
+        int			mAge;      // when mAge == mLifeSpan the particle is disposed 
+        int			mLifespan; // how long a particle lives
+        bool        mFlyOver;  // some particles last longer and fly over the screen and reach the other user
 
     };
 
@@ -28,7 +29,7 @@ class ParticleController {
     // current number of active particles
     size_t mNumParticles;
 
-    ci::gl::VboRef			mParticleVbo;
+    ci::gl::VboRef			mParticleVbo;    // virtual buffer object 
     ci::gl::BatchRef		mParticleBatch;
 
  public:
