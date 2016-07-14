@@ -19,10 +19,12 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+
 #include "cinder/app/App.h"
 #include "cinder/app/RendererGl.h"
 #include "cinder/gl/gl.h"
 #include "cinder/Exception.h"
+#include <stdexcept>
 
 
 #include "Config.h"
@@ -46,7 +48,10 @@ class CollidoscopeApp : public App {
     void setup() override;
     void setupGraphics();
 
+    /** Receives MIDI command messages from MIDI thread */
     void receiveCommands();
+    /** Prints command line usage */
+    void usage();
 
     void keyDown( KeyEvent event ) override;
     void update() override;
@@ -122,10 +127,10 @@ void CollidoscopeApp::keyDown( KeyEvent event )
     switch (c){
     case 'r' : 
         mAudioEngine.record( 0 );
-        mAudioEngine.record( 1 );
         break;
 
     case 'w': {
+
         mWaves[0]->getSelection().setSize(mWaves[0]->getSelection().getSize() + 1);
 
         size_t numSelectionChunks = mWaves[0]->getSelection().getSize();
@@ -467,9 +472,33 @@ CollidoscopeApp::~CollidoscopeApp()
     }
 }
 
+
 CINDER_APP( CollidoscopeApp, RendererGl, [] ( App::Settings *settings) {
-        settings->setWindowSize( 1920, 1080 );
-        settings->setMultiTouchEnabled( false );
-        settings->disableFrameRate();
+
+    const std::vector< string > args = settings->getCommandLineArgs();
+
+    int width = 0;
+    int height = 0;
+
+    try {
+        if( args.size() != 3 )
+            throw std::invalid_argument("");
+
+        width  = std::stoi( args[1] );
+        height = std::stoi( args[2] );
+
+    }
+    catch( std::invalid_argument & e ){
+        console() << "Error: invalid arguments" << std::endl;
+        console() << "Usage: ./Collidoscope window_width window_height" << std::endl;  
+        console() << "For example: ./Collidoscope 1024 768 " << std::endl;  
+
+        settings->setShouldQuit( true );
+        return;
+    }
+
+    settings->setWindowSize( width, height );
+    settings->setMultiTouchEnabled( false );
+    settings->disableFrameRate();
 
 } )
