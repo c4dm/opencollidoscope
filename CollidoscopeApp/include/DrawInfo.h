@@ -93,7 +93,7 @@ public:
     int32_t getWaveCenterY() const
     {
         if ( mWaveIndex == 0 )
-            return mWindowHeight * 0.75f + 1;
+            return mWindowHeight - ( mWindowHeight / ( 2 * NUM_WAVES ) ) + 1;
         else
             return mWindowHeight / (NUM_WAVES * 2);
     }

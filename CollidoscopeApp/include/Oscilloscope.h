@@ -57,11 +57,12 @@ public:
         }
 
         audioVal *= 0.8f;
-        // this yRatio is for the bottom scope, the top will be drawn with a translation/4
-        // because it's half of the half of the tier where the wave is drawn  
+        // map audio val from [-1.0, 1.0] to [0.0, 1.0]
+        // then map the value obtained to the height of the wave tier ( window height / NUM_WAVES ) 
         float yRatio = ((1 + audioVal) / 2.0f) * (di.getWindowHeight() / NUM_WAVES );
         float xRatio = index * (di.getWindowWidth() / (float)mLine.size());
 
+        // this flips the coordinates for the second wave 
         mLine.getPoints()[index].x = float( di.flipX( int(xRatio) ) );
         mLine.getPoints()[index].y = float( di.flipY( int(yRatio) ) );
 

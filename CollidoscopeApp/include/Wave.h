@@ -87,7 +87,10 @@ public:
         /** Sets the size of selection. size is the number of chunks the selection is made of */
         void setSize( size_t size );
         
-        /** Particle spread is used to calculate the size of the cloud of particles */
+        /** The particle spread parameter affects the size of the cloud of particles
+         *  The cloud is the visual conterpart of the grain duration coefficien in sound.
+         *  Indeed spread accepts values from 1 to 8, exactly as the duration coefficient
+         */
         void inline setParticleSpread( float spread ){
             mParticleSpread = spread;
         }
