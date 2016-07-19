@@ -47,6 +47,8 @@
 #include "cinder/audio/linux/ContextJack.h"
 #include "cinder/audio/Exception.h"
 
+#define NUM_CHANNELS 2
+
 namespace cinder { namespace audio { namespace linux {
 
 
@@ -90,7 +92,7 @@ int OutputDeviceNodeJack::jackCallback(jack_nframes_t nframes, void* userData)
     auto ctx = renderData->outputNode->getContext();
     if( ! ctx ) {
         // this is from some cinder library code but it should not happen in Collidoscope as the context is set
-        for( size_t chan = 0; chan < 2; chan++)
+        for( size_t chan = 0; chan < NUM_CHANNELS; chan++)
             zeroJackPort( outputDeviceNode->mOutputPorts[chan], nframes );
 
         return 0;
@@ -102,7 +104,7 @@ int OutputDeviceNodeJack::jackCallback(jack_nframes_t nframes, void* userData)
     ctx = renderData->outputNode->getContext();
     if( ! ctx ) {
 
-        for( size_t chan = 0; chan < 2; chan++)
+        for( size_t chan = 0; chan < NUM_CHANNELS; chan++)
             zeroJackPort( outputDeviceNode->mOutputPorts[chan], nframes );
 
         return 0;
@@ -118,11 +120,11 @@ int OutputDeviceNodeJack::jackCallback(jack_nframes_t nframes, void* userData)
     
     // if clip detection is enabled and buffer clipped, silence it
     //if( outputDeviceNode->checkNotClipping() ){
-        //for( size_t chan = 0; chan < 2; chan++)
+        //for( size_t chan = 0; chan < NUM_CHANNELS; chan++)
         //    zeroJackPort( outputDeviceNode->mOutputPorts[chan], nframes );
     //} 
     //else {
-        for( size_t chan = 0; chan < 2; chan++)
+        for( size_t chan = 0; chan < NUM_CHANNELS; chan++)
             copyToJackPort( outputDeviceNode->mOutputPorts[chan], internalBuffer->getChannel( chan ), nframes  );
     //}
 
@@ -281,7 +283,7 @@ void InputDeviceNodeJack::disableProcessing()
 // Takes audio interface input from the jack port and copies it in the node buffer
 void InputDeviceNodeJack::process( Buffer *buffer )
 {
-    for( size_t chan = 0; chan < 2; chan++){
+    for( size_t chan = 0; chan < NUM_CHANNELS; chan++){
        copyFromJackPort(mInputPorts[chan], buffer->getChannel( chan ), buffer->getNumFrames() ); 
     }
 }
@@ -295,7 +297,7 @@ OutputDeviceNodeRef ContextJack::createOutputDeviceNode( const DeviceRef &device
     if( mOutputDeviceNode  == nullptr ) {
         auto thisRef = std::static_pointer_cast<ContextJack>( shared_from_this() );
 
-        mOutputDeviceNode = makeNode( new OutputDeviceNodeJack( device, Node::Format().channels(2), thisRef ) ) ;
+        mOutputDeviceNode = makeNode( new OutputDeviceNodeJack( device, Node::Format().channels(NUM_CHANNELS), thisRef ) ) ;
 
         // the output device node must have a reference to input device node. In OutputDeviceNodeJack::initialize() 
         // the input node is passed the jack input ports that it will use to fetch incoming audio from the audio interface
@@ -314,7 +316,7 @@ InputDeviceNodeRef ContextJack::createInputDeviceNode( const DeviceRef &device, 
     if( mInputDeviceNode  == nullptr ) {
         auto thisRef = std::static_pointer_cast<ContextJack>( shared_from_this() );
 
-        mInputDeviceNode = makeNode( new InputDeviceNodeJack( device, Node::Format().channels(2), thisRef ) ) ;
+        mInputDeviceNode = makeNode( new InputDeviceNodeJack( device, Node::Format().channels( NUM_CHANNELS ), thisRef ) ) ;
 
         // the output device node must have a reference to input device node. In OutputDeviceNodeJack::initialize() 
         // the input node is passed the jack input ports that it will use to fetch incoming audio from the audio interface
