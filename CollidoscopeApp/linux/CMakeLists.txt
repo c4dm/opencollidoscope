@@ -5,7 +5,7 @@ set( CMAKE_VERBOSE_MAKEFILE on )
 get_filename_component( CINDER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../.." ABSOLUTE )
 include( ${CINDER_DIR}/linux/cmake/Cinder.cmake )
 
-project( Collidoscope )
+project( CollidoscopeApp )
 
 get_filename_component( SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../src" ABSOLUTE )
 get_filename_component( INC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../include" ABSOLUTE )
