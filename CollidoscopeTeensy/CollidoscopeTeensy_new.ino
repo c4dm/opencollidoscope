@@ -67,8 +67,6 @@ const int cc_record = 5;    // MIDI cc controlling RECORD
 //Default Values:
 const int  Enc_def = 64; //default selection length  
 int MIDI_led_state = LOW;
-//boolean reset1 = true;
-//boolean reset2 = true;
 
 ///////////////////////////////////////////////////
 // Interface Inputs
@@ -141,8 +139,8 @@ void loop() {
   button4.update();
 
   
-  uint16_t Jet1_new = analogRead(0); //read Wavejet/Rail 1
-  uint16_t Jet2_new = analogRead(1); //read Wavejet/Rail 2
+  uint16_t Jet1_new = analogRead(0);      //read Wavejet/Rail 1; ADJUST INPUT RANGE ACCORDING TO SENSOR    
+  uint16_t Jet2_new = analogRead(1);      //read Wavejet/Rail 2; ADJUST INPUT RANGE ACCORDING TO SENSOR    
   uint16_t filter1_new = analogRead(2);   //read filter Instrument 1; ADJUST INPUT RANGE ACCORDING TO SENSOR    
   uint16_t filter2_new = analogRead(4);   //read filter Instrument 2; ADJUST INPUT RANGE ACCORDING TO SENSOR  
 
@@ -199,30 +197,26 @@ void loop() {
  
  //Instrument 1 Controls//////////////////////////////////////  
  
- //Loop/Keymode Switch Instrument 1 
-   
+ //Loop/Keymode Switch Instrument 1    
  if (button1.risingEdge()) {   
-   //Serial.println("Loop mode");
    usbMIDI.sendControlChange(cc_play, 1, midi_chan_inst1);
  }
    
  if (button1.fallingEdge()) {   
-   //Serial.println("Keyboardmode mode");
    usbMIDI.sendControlChange(cc_play, 0, midi_chan_inst1);
  }
      
    
  //Record Instrument 1
  if (button2.fallingEdge()) {   
-   //Serial.println("RECORD! Instrument 1");
    usbMIDI.sendControlChange(cc_record, 1, midi_chan_inst1);
  }
 
  //send MIDI Wavejet 1 [Position Instrument 1]
+ //<calibrate>
  if (Jet1_new > Jet1_old+jitter_thresh || Jet1_new < Jet1_old-jitter_thresh) {
     
     int16_t midiVal = constrain( map(Jet1_new, 988, 121, 0, 149), 0, 149 );
-    // int16_t midiVal = constrain( map( Jet1_new, 23, 928, 0, 149 ), 0, 149 ); old collidoscope 
     if( midiVal != Jet1_old_MIDI ){
       Jet1_old_MIDI = midiVal;
       usbMIDI.sendPitchBend( midiVal, midi_chan_inst1 );
@@ -234,8 +228,8 @@ void loop() {
 
 
  //send MIDI Filter 1 [Filter Instrument 1]
-
- if ( filter1_new > filter1_old+jitter_thresh_short || filter1_new < filter1_old-jitter_thresh_short ) {         // maybe adding jitter threshold needed, see Jet1_new  
+ //<calibrate>
+ if ( filter1_new > filter1_old+jitter_thresh_short || filter1_new < filter1_old-jitter_thresh_short ) {
  
     int16_t midiVal = constrain( map(filter1_new, 145, 756, 0, 127), 0, 127 );
     if( midiVal != filter1_old_MIDI){
@@ -251,8 +245,6 @@ void loop() {
   //send MIDI Encoder 1 [Selection length Instrument 1]
   if (Enc1_new != Enc1_old) {
     Enc1_old = Enc1_new;
-    //Serial.println("Encoder 1: ");
-    //Serial.println(Enc1_new);
     usbMIDI.sendControlChange(cc_length, Enc1_new, midi_chan_inst1);
     digitalWrite(Pin_MIDIled, HIGH);
   }
@@ -260,8 +252,6 @@ void loop() {
   //send MIDI Encoder 3 [Duration Instrument 1]
   if (Enc3_new != Enc3_old) {
     Enc3_old = Enc3_new;
-    //Serial.println("Encoder 3: ");
-    //Serial.println(Enc3_new);
     usbMIDI.sendControlChange(cc_duration, Enc3_new, midi_chan_inst1);
     digitalWrite(Pin_MIDIled, HIGH);
   }
@@ -270,27 +260,22 @@ void loop() {
   //Instrument 2 Controls//////////////////////////////////////  
   
   //Loop/Keymode Switch Instrument 2
-   
   if (button3.risingEdge()) {   
-    //Serial.println("Loop mode");
     usbMIDI.sendControlChange(cc_play, 1, midi_chan_inst2);
   }
   
   if (button3.fallingEdge()) {   
-    //Serial.println("Keyboardmode mode");
     usbMIDI.sendControlChange(cc_play, 0, midi_chan_inst2);
   }
   
   //Record Instrument 2
   if (button4.fallingEdge()) {   
-    //Serial.println("RECORD! Instrument 2");
     usbMIDI.sendControlChange(cc_record, 1, midi_chan_inst2);
   }
 
   //send MIDI Wavejet 2 [Position Instrument 2]
-  
+  // <calibrate>
   if (Jet2_new > Jet2_old+jitter_thresh || Jet2_new < Jet2_old-jitter_thresh) {
-    //Serial.println("RECORD! Instrument 2");
     int16_t midiVal = constrain( map( Jet2_new, 109, 992, 149, 0 ), 0, 149 );
     if( midiVal != Jet2_old_MIDI ){
       Jet2_old_MIDI = midiVal;
@@ -301,11 +286,11 @@ void loop() {
     digitalWrite(Pin_MIDIled, HIGH);
   }
   
- //Serial.println(filter2_new);
-   if ( filter2_new > filter2_old+jitter_thresh_short || filter2_new < filter2_old-jitter_thresh_short ) {         // maybe adding jitter threshold needed, see Jet1_new  
+  //send MIDI Filter 2 [Filter Instrument 2]
+  //<calibrate>
+  if ( filter2_new > filter2_old+jitter_thresh_short || filter2_new < filter2_old-jitter_thresh_short ) {
     int16_t midiVal = constrain( map(filter2_new, 132, 700, 0, 127), 0, 127 );
     if( midiVal != filter2_old_MIDI){
-      //Serial.println( midiVal );
       filter2_old_MIDI = midiVal;
       usbMIDI.sendControlChange(cc_filter, midiVal, midi_chan_inst2);
     }
@@ -318,8 +303,6 @@ void loop() {
   //send MIDI Encoder 2 [Selection length Instrument 2]
   if (Enc2_new != Enc2_old) {
     Enc2_old = Enc2_new;
-    //Serial.println("Encoder 2: ");
-    //Serial.println(Enc2_new);
     usbMIDI.sendControlChange(cc_length, Enc2_new, midi_chan_inst2);
     digitalWrite(Pin_MIDIled, HIGH);
   }
@@ -327,8 +310,6 @@ void loop() {
   //send MIDI Encoder 4 [Duration Instrument 2]
   if (Enc4_new != Enc4_old) {
     Enc4_old = Enc4_new;
-    //Serial.println("Encoder 4: ");
-    //Serial.println(Enc4_new);
     usbMIDI.sendControlChange(cc_duration, Enc4_new, midi_chan_inst2);
     digitalWrite(Pin_MIDIled, HIGH);
   }

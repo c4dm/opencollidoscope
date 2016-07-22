@@ -80,9 +80,6 @@ const int Pin_record1_led =  4; //D4
 const int Pin_record2_led =  5; //D5
 const int Pin_MIDIled =  6;
 
-//const int Pin_reset1 = 22;    //B2, not in use
-//const int Pin_reset2 = 25;    //B5, not in use
-
 Bounce button1 = Bounce(Pin_play1, 5); 
 Bounce button2 = Bounce(Pin_record1, 5); 
 Bounce button3 = Bounce(Pin_play2, 5); 
@@ -95,7 +92,7 @@ Encoder Enc2 (2, 3);  //Encoder for section length on Wavejet 2
 
 
 // Variables
-const int jitter_thresh = 10; //7threshold value for analog INs to suppress sending MIDI due to input jitter 
+const int jitter_thresh = 10; // threshold value for analog INs to suppress sending MIDI due to input jitter 
 
 void setup() {  
 
@@ -140,10 +137,10 @@ void loop() {
   button4.update();
 
   
-  uint16_t Jet1_new = analogRead(0); //read Wavejet/Rail 1
-  uint16_t Jet2_new = analogRead(1); //read Wavejet/Rail 2
-  uint16_t filter1_new = analogRead(2);   //read filter Instrument 1; ADJUST INPUT RANGE ACCORDING TO SENSOR    
-  uint16_t filter2_new = analogRead(4);   //read filter Instrument 2; ADJUST INPUT RANGE ACCORDING TO SENSOR  
+  uint16_t Jet1_new = analogRead(0);      //read Wavejet/Rail 1; ADJUST INPUT RANGE ACCORDING TO SENSOR    
+  uint16_t Jet2_new = analogRead(1);      //read Wavejet/Rail 2; ADJUST INPUT RANGE ACCORDING TO SENSOR    
+  uint16_t filter1_new = analogRead(2);   //read filter Instrument 1;    
+  uint16_t filter2_new = analogRead(4);   //read filter Instrument 2;
   uint16_t dur1_new = analogRead(3); 
   uint16_t dur2_new = analogRead(5);
 
@@ -191,9 +188,8 @@ void loop() {
  }
 
  //send MIDI Wavejet 1 [Position Instrument 1]
-   //Serial.print("W1>"); Serial.println(Jet1_new);
+ //<calibrate>
  if (Jet1_new > Jet1_old+jitter_thresh || Jet1_new < Jet1_old-jitter_thresh) {
-    //int16_t midiVal = constrain( map(Jet1_new, 24, 926, 0, 149), 0, 149 );
     int16_t midiVal = constrain( map(Jet1_new, 18, 800, 0, 149), 0, 149 );
     if( midiVal != Jet1_old_MIDI ){
       Jet1_old_MIDI = midiVal;
@@ -207,7 +203,6 @@ void loop() {
 
  //send MIDI Filter 1 [Filter Instrument 1]
  if ( filter1_new != filter1_old ) {
-
     int16_t midiVal = constrain( map(filter1_new, 0, 1024, 0, 127), 0, 127 );
     if( midiVal != filter1_old_MIDI){
       //Serial.println( midiVal );
@@ -223,7 +218,6 @@ void loop() {
  
     int16_t midiVal = constrain( map(dur1_new, 0, 1024, 0, 127), 0, 127 );
     if( midiVal != dur1_old_MIDI){
-      //Serial.println( midiVal );
       dur1_old_MIDI = midiVal;
       usbMIDI.sendControlChange(cc_duration, midiVal, midi_chan_inst1);
     }
@@ -235,8 +229,6 @@ void loop() {
   //send MIDI Encoder 1 [Selection length Instrument 1]
   if (Enc1_new != Enc1_old) {
     Enc1_old = Enc1_new;
-    //Serial.println("Encoder 1: ");
-    //Serial.println(Enc1_new);
     usbMIDI.sendControlChange(cc_length, Enc1_new, midi_chan_inst1);
     digitalWrite(Pin_MIDIled, HIGH);
   }
@@ -261,9 +253,8 @@ void loop() {
   }
 
   //send MIDI Wavejet 2 [Position Instrument 2]
-  // Serial.print("W2>"); Serial.println(Jet2_new);
+  //<calibrate>
   if (Jet2_new > Jet2_old+jitter_thresh || Jet2_new < Jet2_old-jitter_thresh) {
-    //int16_t midiVal = constrain( map( Jet2_new, 925, 18, 149, 0 ), 0, 149 );
     int16_t midiVal = constrain( map( Jet2_new, 15, 780, 0, 149 ), 0, 149 );
     if( midiVal != Jet2_old_MIDI ){
       Jet2_old_MIDI = midiVal;
