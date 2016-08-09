@@ -100,8 +100,8 @@ const int jitter_thresh = 10; // threshold value for analog INs to make up for i
 long Enc1_old = -999;
 long Enc2_old = -999;
 
-long Enc3_old = 0;
-long Enc4_old = 0;
+long Enc3_old = -999;
+long Enc4_old = -999;
 
 uint16_t Jet1_old = 0;
 int16_t Jet1_old_MIDI = -1;
