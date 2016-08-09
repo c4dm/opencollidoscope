@@ -2,7 +2,7 @@
 /******************************************************************************
  *  Copyright (C) 2015  Ben Bengler (mail@benbengler.com)
  *  Copyright (C) 2016  Queen Mary University of London 
- *  Authors: Ben Bengler, Fiore Martin
+ *  Authors: Ben Bengler, Fiore Martin, Christopher Paton (christopher.paton@gmail.com)
  *
  *  This file is part of Collidoscope.
  *
@@ -47,7 +47,6 @@
  *
  ******************************************************************************/ 
 
-
 #include <Encoder.h>
 #include <Bounce.h>
 
@@ -71,7 +70,7 @@ int MIDI_led_state = LOW;
 ///////////////////////////////////////////////////
 // Interface Inputs
 
-//Buttons:
+//Buttons
 
 const int Pin_play1 = 20;       //B0    
 const int Pin_record1 = 21;     //B1
@@ -81,142 +80,98 @@ const int Pin_record1_led =  4; //D4
 const int Pin_record2_led =  5; //D5
 const int Pin_MIDIled =  6;
 
-//const int Pin_reset1 = 22;    //B2, not in use
-//const int Pin_reset2 = 25;    //B5, not in use
-
 Bounce button1 = Bounce(Pin_play1, 5); 
 Bounce button2 = Bounce(Pin_record1, 5); 
 Bounce button3 = Bounce(Pin_play2, 5); 
 Bounce button4 = Bounce(Pin_record2, 5); 
 
  
-//Encoder
+//Encoders
 Encoder Enc1 (0, 1);  //Encoder for section length on Wavejet 1
 Encoder Enc2 (2, 3);  //Encoder for section length on Wavejet 2
-Encoder Enc3 (36, 37);  //Encoder for duration of Wavejet 1 [granularisation effect]
-Encoder Enc4 (18, 19);  //Encoder for duration of Wavejet 2 [granularisation effect]
+Encoder Enc3 (36, 37); //Encoder for duration of Wavejet 1 [granularisation effect]
+Encoder Enc4 (18, 19); //Encoder for duration of Wavejet 2 [granularisation effect]
+
 
 // Variables
-const int jitter_thresh = 10; //7threshold value for analog INs to suppress sending MIDI due to input jitter 
-const int jitter_thresh_short = 5;
-
-void setup() {  
-
-pinMode(Pin_play1, INPUT_PULLUP); 
-pinMode(Pin_record1, INPUT_PULLUP);
-pinMode(Pin_play2, INPUT_PULLUP);
-pinMode(Pin_record2, INPUT_PULLUP);
-
-
-pinMode(Pin_MIDIled, OUTPUT); 
-pinMode(Pin_record1_led, OUTPUT);
-pinMode(Pin_record2_led, OUTPUT);
-}
+const int jitter_thresh = 10; // threshold value for analog INs to make up for input jitter 
 
 //Store recent values to detect parameter change
 long Enc1_old = -999;
 long Enc2_old = -999;
-long Enc3_old = -999;
-long Enc4_old = -999;
+
+long Enc3_old = 0;
+long Enc4_old = 0;
 
 uint16_t Jet1_old = 0;
 int16_t Jet1_old_MIDI = -1;
 uint16_t Jet2_old = 0;
 int16_t Jet2_old_MIDI = -1;
+
 uint16_t filter1_old = 0;
 int16_t filter1_old_MIDI = -1;
 uint16_t filter2_old = 0;
 int16_t filter2_old_MIDI = -1;
 
-void loop() {
+uint16_t dur1_old = 0;
+int16_t dur1_old_MIDI = -1;
+uint16_t dur2_old = 0;
+int16_t dur2_old_MIDI = -1;
 
+
+void setup() 
+{  
+  pinMode(Pin_play1, INPUT_PULLUP); 
+  pinMode(Pin_record1, INPUT_PULLUP);
+  pinMode(Pin_play2, INPUT_PULLUP);
+  pinMode(Pin_record2, INPUT_PULLUP);
+  
+  
+  pinMode(Pin_MIDIled, OUTPUT); 
+  pinMode(Pin_record1_led, OUTPUT);
+  pinMode(Pin_record2_led, OUTPUT);
+}
+
+void loop() 
+{
   digitalWrite(Pin_MIDIled, LOW);
   digitalWrite(Pin_record1_led, HIGH);
   digitalWrite(Pin_record2_led, HIGH);
+  
   button1.update();
   button2.update();
   button3.update();
   button4.update();
 
+  uint16_t Jet1_new = analogRead(0);      //read Wavejet/Rail 1; ADJUST INPUT RANGE ACCORDING TO SENSOR 
+  uint16_t Jet2_new = analogRead(1);      //read Wavejet/Rail 2; ADJUST INPUT RANGE ACCORDING TO SENSOR 
+  uint16_t filter1_new = analogRead(2);   //read filter Instrument 1; ADJUST INPUT RANGE ACCORDING TO SENSOR 
+  uint16_t filter2_new = analogRead(4);   //read filter Instrument 2; ADJUST INPUT RANGE ACCORDING TO SENSOR 
+  uint16_t dur1_new = analogRead(3); 
+  uint16_t dur2_new = analogRead(5);
   
-  uint16_t Jet1_new = analogRead(0);      //read Wavejet/Rail 1; ADJUST INPUT RANGE ACCORDING TO SENSOR    
-  uint16_t Jet2_new = analogRead(1);      //read Wavejet/Rail 2; ADJUST INPUT RANGE ACCORDING TO SENSOR    
-  uint16_t filter1_new = analogRead(2);   //read filter Instrument 1; ADJUST INPUT RANGE ACCORDING TO SENSOR    
-  uint16_t filter2_new = analogRead(4);   //read filter Instrument 2; ADJUST INPUT RANGE ACCORDING TO SENSOR  
-
-
+  //------ SEND INSTRUMENT 1 MIDI -----------
   
-  //Encoder 1 [Controls selection length of wave 1]
-  long Enc1_new = Enc1.read();
-  Enc1_new = constrain(Enc1_new, 0, 127); //constrain to 7-bit MIDI range
-  
-  //Dynamic reset of counter to MIDI range 
-  if (Enc1_new <= 0){
-    Enc1.write(0); 
-  }
-  else if (Enc1_new >= 127){
-    Enc1.write(127); 
-  }
-     
-  //Encoder 2 [Controls selection length of wave 2]
-  long Enc2_new = Enc2.read();
-  Enc2_new = constrain(Enc2_new, 0, 127); //constrain to 7-bit MIDI range
-  
-  //Dynamic reset of counter to MIDI range 
-  if (Enc2_new <= 0){
-    Enc2.write(0); 
-  }
-  else if (Enc2_new >= 127){
-    Enc2.write(127); 
-  }
-
-  //Encoder 3 [Controls duration of wave 1]
-  long Enc3_new = Enc3.read();
-  Enc3_new = constrain(Enc3_new, 0, 127); //constrain to 7-bit MIDI range
-  
-  //Dynamic reset of counter to MIDI range 
-  if (Enc3_new <= 0){
-    Enc3.write(0); 
-  }
-  else if (Enc3_new >= 127){
-    Enc3.write(127); 
-  }
-
-  //Encoder 4 [Controls duration of wave 2]
-  long Enc4_new = Enc4.read();
-  Enc4_new = constrain(Enc4_new, 0, 127); //constrain to 7-bit MIDI range
-  
-  //Dynamic reset of counter to MIDI range 
-  if (Enc4_new <= 0){
-    Enc4.write(0); 
-  }
-  else if (Enc4_new >= 127){
-    Enc4.write(127); 
-  }
-
- 
- //Instrument 1 Controls//////////////////////////////////////  
- 
- //Loop/Keymode Switch Instrument 1    
- if (button1.risingEdge()) {   
+  // Play button instrument 1
+  if (button1.fallingEdge()){   
    usbMIDI.sendControlChange(cc_play, 1, midi_chan_inst1);
- }
+  }
    
- if (button1.fallingEdge()) {   
+  if (button1.risingEdge()){   
    usbMIDI.sendControlChange(cc_play, 0, midi_chan_inst1);
- }
-     
-   
- //Record Instrument 1
- if (button2.fallingEdge()) {   
-   usbMIDI.sendControlChange(cc_record, 1, midi_chan_inst1);
- }
+  }
 
- //send MIDI Wavejet 1 [Position Instrument 1]
- //<calibrate>
- if (Jet1_new > Jet1_old+jitter_thresh || Jet1_new < Jet1_old-jitter_thresh) {
-    
-    int16_t midiVal = constrain( map(Jet1_new, 988, 121, 0, 149), 0, 149 );
+   
+  // Record button instrument 1
+  if (button2.fallingEdge()){   
+   usbMIDI.sendControlChange(cc_record, 1, midi_chan_inst1);
+  }
+
+  // Selection start position instrument 1 
+  // <calibrate>
+  if (Jet1_new > Jet1_old+jitter_thresh || Jet1_new < Jet1_old-jitter_thresh){
+
+    int16_t midiVal = constrain( map(Jet1_new, 994, 121, 0, 149), 0, 149 );
     if( midiVal != Jet1_old_MIDI ){
       Jet1_old_MIDI = midiVal;
       usbMIDI.sendPitchBend( midiVal, midi_chan_inst1 );
@@ -224,16 +179,14 @@ void loop() {
 
     Jet1_old = Jet1_new;
     digitalWrite(Pin_MIDIled, HIGH);
- }
+  }
 
+  //Filter instrument 1
+  // <calibrate>
+  if ( filter1_new != filter1_old ) {
 
- //send MIDI Filter 1 [Filter Instrument 1]
- //<calibrate>
- if ( filter1_new > filter1_old+jitter_thresh_short || filter1_new < filter1_old-jitter_thresh_short ) {
- 
-    int16_t midiVal = constrain( map(filter1_new, 145, 756, 0, 127), 0, 127 );
+    int16_t midiVal = constrain( map(filter1_new, 137, 734, 0, 127), 0, 127 );
     if( midiVal != filter1_old_MIDI){
-      //Serial.println( midiVal );
       filter1_old_MIDI = midiVal;
       usbMIDI.sendControlChange(cc_filter, midiVal, midi_chan_inst1);
     }
@@ -241,42 +194,64 @@ void loop() {
     filter1_old = filter1_new;
     digitalWrite(Pin_MIDIled, HIGH);
   }
-
-  //send MIDI Encoder 1 [Selection length Instrument 1]
+  
+  //Selection length instrument 1
+  long Enc1_new = Enc1.read();
+  Enc1_new = constrain(Enc1_new, 0, 127); //constrain to 7-bit MIDI range
+ 
+  if (Enc1_new <= 0){ //Dynamic reset of counter to MIDI range 
+    Enc1.write(0); 
+  }
+  else if (Enc1_new >= 127){
+    Enc1.write(127); 
+  }
+  
   if (Enc1_new != Enc1_old) {
     Enc1_old = Enc1_new;
     usbMIDI.sendControlChange(cc_length, Enc1_new, midi_chan_inst1);
     digitalWrite(Pin_MIDIled, HIGH);
   }
+  
+  //Grain duration instrument 1
+  long Enc3_new = Enc3.read();
+  Enc3_new = constrain(Enc3_new, 0, 127); //constrain to 7-bit MIDI range
 
-  //send MIDI Encoder 3 [Duration Instrument 1]
+  if (Enc3_new <= 0){
+    Enc3.write(0); 
+  }
+  else if (Enc3_new >= 127){
+    Enc3.write(127); 
+  }
+ 
   if (Enc3_new != Enc3_old) {
     Enc3_old = Enc3_new;
     usbMIDI.sendControlChange(cc_duration, Enc3_new, midi_chan_inst1);
     digitalWrite(Pin_MIDIled, HIGH);
   }
+
+  //------ SEND INSTRUMENT 2 MIDI -----------
   
   
-  //Instrument 2 Controls//////////////////////////////////////  
-  
-  //Loop/Keymode Switch Instrument 2
-  if (button3.risingEdge()) {   
+  //Play button instrument 2   
+  if (button3.fallingEdge()) {   
     usbMIDI.sendControlChange(cc_play, 1, midi_chan_inst2);
   }
   
-  if (button3.fallingEdge()) {   
+  if (button3.risingEdge()) {   
     usbMIDI.sendControlChange(cc_play, 0, midi_chan_inst2);
   }
   
-  //Record Instrument 2
+  //Record button instrument 2
   if (button4.fallingEdge()) {   
     usbMIDI.sendControlChange(cc_record, 1, midi_chan_inst2);
   }
 
-  //send MIDI Wavejet 2 [Position Instrument 2]
-  // <calibrate>
+  // Selection start position instrument 2 
+  // <calibrate> 
   if (Jet2_new > Jet2_old+jitter_thresh || Jet2_new < Jet2_old-jitter_thresh) {
-    int16_t midiVal = constrain( map( Jet2_new, 109, 992, 149, 0 ), 0, 149 );
+	
+    int16_t midiVal = constrain( map( Jet2_new, 103, 993, 149, 0 ), 0, 149 );
+    
     if( midiVal != Jet2_old_MIDI ){
       Jet2_old_MIDI = midiVal;
       usbMIDI.sendPitchBend( midiVal, midi_chan_inst2 );
@@ -286,10 +261,11 @@ void loop() {
     digitalWrite(Pin_MIDIled, HIGH);
   }
   
-  //send MIDI Filter 2 [Filter Instrument 2]
-  //<calibrate>
-  if ( filter2_new > filter2_old+jitter_thresh_short || filter2_new < filter2_old-jitter_thresh_short ) {
-    int16_t midiVal = constrain( map(filter2_new, 132, 700, 0, 127), 0, 127 );
+  //Filter instrument 2
+  // <calibrate>
+  if ( filter2_new != filter2_old ) {
+ 
+    int16_t midiVal = constrain( map(filter2_new, 125, 684, 0, 127), 0, 127 );
     if( midiVal != filter2_old_MIDI){
       filter2_old_MIDI = midiVal;
       usbMIDI.sendControlChange(cc_filter, midiVal, midi_chan_inst2);
@@ -297,17 +273,36 @@ void loop() {
     
     filter2_old = filter2_new;
     digitalWrite(Pin_MIDIled, HIGH);
-  }
-   
+  }   
   
-  //send MIDI Encoder 2 [Selection length Instrument 2]
+  //Selection length instrument 2 
+  long Enc2_new = Enc2.read();
+  Enc2_new = constrain(Enc2_new, 0, 127); //constrain to 7-bit MIDI range
+  
+  if (Enc2_new <= 0){ //Dynamic reset of counter to MIDI range 
+    Enc2.write(0); 
+  }
+  else if (Enc2_new >= 127){
+    Enc2.write(127); 
+  }
+
   if (Enc2_new != Enc2_old) {
     Enc2_old = Enc2_new;
     usbMIDI.sendControlChange(cc_length, Enc2_new, midi_chan_inst2);
     digitalWrite(Pin_MIDIled, HIGH);
   }
+  
+  //Grain duration instrument 2
+  long Enc4_new = Enc4.read();
+  Enc4_new = constrain(Enc4_new, 0, 127); //constrain to 7-bit MIDI range
+  
+  if (Enc4_new <= 0){
+    Enc4.write(0); 
+  }
+  else if (Enc4_new >= 127){
+    Enc4.write(127); 
+  }
 
-  //send MIDI Encoder 4 [Duration Instrument 2]
   if (Enc4_new != Enc4_old) {
     Enc4_old = Enc4_new;
     usbMIDI.sendControlChange(cc_duration, Enc4_new, midi_chan_inst2);
