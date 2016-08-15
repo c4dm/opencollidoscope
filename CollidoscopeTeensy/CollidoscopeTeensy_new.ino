@@ -56,16 +56,10 @@ const int midi_chan_inst1 = 1; // MIDI channel for Instrument 1
 const int midi_chan_inst2 = 2; // MIDI channel for Instrument 2
 
 const int cc_length = 1;    // MIDI cc controlling selection length
-const int cc_duration = 2;  // MIDI cc controlling duration
+const int cc_duration = 2;  // MIDI cc controlling grain duration
 const int cc_filter = 7;    // MIDI cc controlling LP filter
 const int cc_play = 4;      // MIDI cc controlling PLAY
 const int cc_record = 5;    // MIDI cc controlling RECORD
-//const int cc_reset = 100; // MIDI cc controlling instrument RESET
-
-///////////////////////////////////////////////////
-//Default Values:
-const int  Enc_def = 64; //default selection length  
-int MIDI_led_state = LOW;
 
 ///////////////////////////////////////////////////
 // Interface Inputs
