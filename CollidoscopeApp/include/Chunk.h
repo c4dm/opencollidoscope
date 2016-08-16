@@ -33,7 +33,7 @@ class DrawInfo;
  *
  * A chunk of audio in Collidoscope low-fi visual wave. 
  *
- * The visual wave of Collidoscope is made out of a number of bars that mimics in a low-fi fashion the typical waveform based representation of audio.
+ * The visual wave of Collidoscope is made out of a number of bars that mimic, in a low-fi fashion, the typical waveform-based representation of audio.
  * A Chunk is one of the bars of the visual wave. 
  *
  */
@@ -47,7 +47,7 @@ public:
     const static float kHalfWidth;
 
     /**
-     * Constructor, takes as argument the index of this chunk in the wave
+     * Constructor, takes as argument the index of this chunk in the wave that contains it
      */ 
     Chunk( size_t index );
 
@@ -69,7 +69,7 @@ public:
     float inline getBottom() const { return mAudioBottom; }
 
     /**
-     * Reset this chunks. When a chunk is reset it starts shrinking until it disappears.
+     * Reset this chunks. When a chunk is reset, it starts shrinking until it disappears or setTop/setBottom are called again
      *
      */ 
     void reset(){

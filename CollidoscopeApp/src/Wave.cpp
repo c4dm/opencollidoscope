@@ -87,9 +87,9 @@ void Wave::update( double secondsPerChunk, const DrawInfo& di ) {
 
         double elapsed = now - itr->second.lastUpdate;
 
-        // A chunk of audio corresponds to a certain time according to sample rate.
-        // Use elapsed time to advance through chunks so that the cursor is animated 
-        // and goes from start to end of the seleciton in the time span of the grain 
+        // A chunk of audio corresponds to a certain time lenght of audio, according to sample rate.
+        // Use elapsed time to advance through chunks so that the cursor is animated. 
+        // So it goes from start to end of the selection in the time span of the grain 
         itr->second.pos = mSelection.getStart() + int( elapsed / secondsPerChunk );
 
         // check we don't go too far off 
@@ -160,7 +160,7 @@ void Wave::draw( const DrawInfo& di ){
                 gl::color(mSelection.getColor().r, mSelection.getColor().g, mSelection.getColor().b, selectionAlpha);
             }
 
-            // check if one of the cursors is positioned in this chunk  
+            // check if one of the cursors is positioned in this chunk, and draw it white if it is 
             if (std::find(mCursorsPos.begin(), mCursorsPos.end(),i) != mCursorsPos.end() ){
                 gl::color(CURSOR_CLR);
                 mChunks[i].draw( di, mChunkBatch );
@@ -176,7 +176,7 @@ void Wave::draw( const DrawInfo& di ){
                 /* draw the selection bar with a transparent selection color */
                 gl::color(mSelection.getColor().r, mSelection.getColor().g, mSelection.getColor().b, 0.5f);
                 mChunks[i].drawBar( di, mChunkBatch );
-                /* set the colo to the wave */
+                /* set the color to the wave */
                 gl::color(this->mColor);  
             }
         }

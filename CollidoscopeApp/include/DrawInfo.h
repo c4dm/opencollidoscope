@@ -58,7 +58,7 @@ public:
     }
 
     /**
-     * Maps a value in the audio space [-1.0, 1.0] to a position on the y axis of this DrawInf's bounding area.
+     * Maps a value in the audio space [-1.0, 1.0] to a position on the y axis of this DrawInfo's bounding area.
      *
      */ 
     float audioToHeigt(float audioSample) const {
@@ -99,7 +99,7 @@ public:
     }
 
     /**
-     * Flips y according to the index of the wave. It is needed because the second wave in collidoscope is upside down from the orientation oftthe screen.
+     * Flips y according to the index of the wave. It is needed because the second wave in collidoscope is drawn upside down in the screen.
      */ 
     int flipY(int y) const 
     {
@@ -110,7 +110,7 @@ public:
     }
 
     /**
-     * Returns x. not used at he moment.
+     * Returns x. not used at the moment.
      *
      */ 
     int flipX(int x) const

@@ -60,8 +60,8 @@ typedef ci::audio::dsp::RingBufferT<RecordWaveMsg> RecordWaveMsgRingBuffer;
 /**
  * A \a Node in the audio graph of the Cinder audio library that records input in a buffer.
  *
- * This class is similar to \a cinder::audio::BufferRecorderNode (it's a derivative work of this class indeed) but it has an additional feature.
- * When recording it uses the audio input samples to compute the size values of the visual chunks. 
+ * This class is similar to \a cinder::audio::BufferRecorderNode (it's a derivative work of this class indeed) but it has an additional feature:
+ * when recording, it uses the audio input samples to compute the size values of the visual chunks. 
  * The chunks values are stored in a ring buffer and fetched by the graphic thread to paint the wave as it gets recorded.
  *
  */

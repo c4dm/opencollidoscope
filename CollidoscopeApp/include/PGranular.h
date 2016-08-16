@@ -1,7 +1,8 @@
 /*
 
+ Copyright (C) 2002 James McCartney.
  Copyright (C) 2016  Queen Mary University of London 
- Author: Fiore Martin
+ Author: Fiore Martin, based on Supercollider's (http://supercollider.github.io) TGrains code and Ross Bencina's "Implementing Real-Time Granular Synthesis"
 
  This file is part of Collidoscope.
  
@@ -33,13 +34,13 @@ using std::size_t;
 
 /**
  * The very core of the Collidoscope audio engine: the granular synthesizer.
- * Based on SuperCollider's TGrains and Ross Becina's "Implementing Real-Time Granular Synthesis" 
+ * Based on SuperCollider's TGrains and Ross Bencina's "Implementing Real-Time Granular Synthesis" 
  *
  * It implements Collidoscope's selection-based approach to granular synthesis. 
  * A grain is basically a selection of a recorded sample of audio. 
- * Grains are played in a loop: they are retriggered each time they reach the end of the selection.
- * However, if the duration coefficient is greater than one, a new grain is re-triggered before the previous one is done. 
- * The grains start to overlap with each other and create the typical eerie sound of grnular synthesis.
+ * Grains are played in a loop: they are re-triggered each time they reach the end of the selection.
+ * However, if the duration coefficient is greater than one, a new grain is re-triggered before the previous one is done,
+ * the grains start to overlap with each other and create the typical eerie sound of grnular synthesis.
  * Also every time a new grain is triggered, it is offset of a few samples from the initial position to make the timbre more interesting.
  *
  *
@@ -75,7 +76,7 @@ public:
     {
         double phase;    // read pointer to mBuffer of this grain 
         double rate;     // rate of the grain. e.g. rate = 2 the grain will play twice as fast
-        bool alive;      // whether this grain is alive. Not alive means it has been processed and can be replanced by another grain
+        bool alive;      // whether this grain is alive. Not alive means it has been processed and can be replaced by another grain
         size_t age;      // age of this grain in samples 
         size_t duration; // duration of this grain in samples. minimum = 4
 
@@ -91,11 +92,11 @@ public:
      *
      * \param buffer a pointer to an array of T that contains the original sample that will be granulized
      * \param bufferLen length of buffer in samples 
-     * \rand function returning of type size_t ()(void) that is called back each time a new grain is generated. The returned value is used 
+     * \rand function of type size_t ()(void) that is called back each time a new grain is generated. The returned value is used 
      * to offset the starting sample of the grain. This adds more colour to the sound especially with small selections. 
-     * \triggerCallback function of type void ()(char, int) that is called back each time a new grain is triggered.
-     *      The function is passed the character 't' as first parameter when a new grain is triggered and the characted 't' when the synths becomes idle.
-     * \ID id of this PGrain is passed to the triggerCallback function as second parameter to identify this PGranular as the caller.
+     * \triggerCallback function of type void ()(char, int) that is called back each time a new grain is generated.
+     *      The function is passed the character 't' as first parameter when a new grain is triggered and the characted 'e' when the synth becomes idle (no sound).
+     * \ID id of this PGrain. Passed to the triggerCallback function as second parameter to identify this PGranular as the caller.
      */ 
     PGranular( const T* buffer, size_t bufferLen, size_t sampleRate, RandOffsetFunc & rand, TriggerCallbackFunc & triggerCallback, int ID ) :
         mBuffer( buffer ),
@@ -204,8 +205,8 @@ public:
     /**
      * Runs the granular engine and stores the output in \a audioOut
      * 
-     * \param pointer to an array of T. This will be filled with the output of PGranular. It needs to be at least \a numSamples lond
-     * \param tempBuffer a temporary buffer used to store the envelope value. It needs to be at leas \a numSamples long
+     * \param pointer to an array of T. This will be filled with the output of PGranular. It needs to be at least \a numSamples long
+     * \param tempBuffer a temporary buffer used to store the envelope value. It needs to be at least \a numSamples long
      * \param numSamples number of samples to be processed 
      */ 
     void process( T* audioOut, T* tempBuffer, size_t numSamples )
@@ -318,11 +319,11 @@ private:
 
     // synthesize a single grain 
     // audioOut = pointer to audio block to fill 
-    // numSamples = numpber of samples to process for this block
+    // numSamples = number of samples to process for this block
     void synthesizeGrain( PGrain &grain, T* audioOut, T* envelopeValues, size_t numSamples )
     {
 
-        // copy all grain data into local variable for faster porcessing
+        // copy all grain data into local variable for faster processing
         const auto rate = grain.rate;
         auto phase = grain.phase;
         auto age = grain.age;
@@ -364,8 +365,8 @@ private:
         }
 
         if ( age == duration ){
-            // if it porocessed all the samples left to leave ( numSamplesToOut = duration-age)
-            // then the grain is had finished 
+            // if it processed all the samples left to leave ( numSamplesToOut = duration-age)
+            // then the grain is finished 
             grain.alive = false;
         }
         else{
@@ -398,15 +399,15 @@ private:
     // length of mBuffer in samples 
     const size_t mBufferLen;
 
-    // offset in the buffer where the grains start. a.k.a. seleciton start 
+    // offset in the buffer where the grains start. a.k.a. selection start 
     size_t mGrainsStart;
 
-    // attenuates signal prevents clipping of grains 
+    // attenuates signal prevents clipping of grains (to some degree)
     T mAttenuation;
 
     // grain duration in samples 
     double mGrainsDurationCoeff;
-    // duration of grains is selcection size * duration coeff
+    // duration of grains is selection size * duration coeff
     size_t mGrainsDuration;
     // rate of grain, affects pitch 
     double mGrainsRate;

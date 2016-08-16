@@ -75,7 +75,7 @@ public:
     */ 
     size_t getRecordWaveAvailable( size_t index );
     /**
-    * Called from the graphic thread. Reads count elements from the wave ring buffer into \a buffer.
+    * Called from the graphic thread. Reads \a count elements from the wave ring buffer into \a buffer.
     * The wave ring buffer is used to pass the size of the wave chunks from the audio thread to the graphic thread, 
     * when a new wave is recorded.
     *
@@ -106,7 +106,7 @@ private:
     // nodes for recording audio input into buffer. Also sends chunks information through 
     // non-blocking queue 
     std::array< BufferToWaveRecorderNodeRef, NUM_WAVES > mBufferRecorderNodes;
-    // pgranulars for loop synths 
+    // pgranulars wrapped in a Cinder::Node 
     std::array< PGranularNodeRef, NUM_WAVES > mPGranularNodes;
 
 

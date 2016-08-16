@@ -66,7 +66,7 @@ public:
     }
 
     /**
-     * Returns wave's selection color
+     * Returns wave selection color
      */ 
     ci::Color getWaveSelectionColor(size_t waveIdx) const
     {
@@ -123,7 +123,7 @@ public:
     /**
      * The value returned is used when creating the oscilloscope. 
      * The oscilloscope represents the audio output buffer graphically. However it doesn't need to be as refined as the 
-     * audio wave and it's downsampled using the following formula :  number of oscilloscope points = size o audio output buffer / getOscilloscopeNumPointsDivider() 
+     * audio wave and it's downsampled using the following formula :  (number of oscilloscope points) = (size of audio output buffer) / getOscilloscopeNumPointsDivider() 
      */ 
     size_t getOscilloscopeNumPointsDivider() const
     {

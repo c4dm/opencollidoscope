@@ -65,8 +65,9 @@ class CollidoscopeApp : public App {
     array< shared_ptr< Wave >, NUM_WAVES > mWaves;
     array< shared_ptr< DrawInfo >, NUM_WAVES > mDrawInfos;
     array< shared_ptr< Oscilloscope >, NUM_WAVES > mOscilloscopes;
-    // buffers to read the wave messages as a new wave gets recorded 
+    // buffer to read the WAVE_* messages as a new wave gets recorded 
     array< RecordWaveMsg*, NUM_WAVES> mRecordWaveMessageBuffers;
+    //buffer to read the TRIGGER_* messages as the pgranulars play
     array< vector< CursorTriggerMsg >, NUM_WAVES > mCursorTriggerMessagesBuffers;
 
     double mSecondsPerChunk;

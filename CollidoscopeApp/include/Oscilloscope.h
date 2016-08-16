@@ -44,8 +44,8 @@ public:
         {}
 
     /**
-     * Sets the value of a point of the oscilloscope. The value is passed as an audio coordinate [-1.0, 1.0].
-     * A reference to DrawInfo is passed to calculate the graphic coordinate of the point based on the audio value passed. 
+     * Sets the value of a point of the oscilloscope. The value is passed in audio coordinates [-1.0, 1.0].
+     * A reference to DrawInfo is passed to calculate the graphic coordinate of the point based on the audio values passed. 
      */ 
     void  setPoint( int index, float audioVal, const DrawInfo &di ){
 
@@ -66,9 +66,9 @@ public:
         mLine.getPoints()[index].x = float( di.flipX( int(xRatio) ) );
         mLine.getPoints()[index].y = float( di.flipY( int(yRatio) ) );
 
-        // add the missing line to reach the right of the window
-        // indeed the scope starts from 0 to size -1 and adds xRatio
-        // to each new point to the line from n-1 to n is missing 
+        // add the missing line to reach the right of the window.
+        // Indeed, the scope starts from 0 to size-1 and adds xRatio
+        // to each new point. The line from n-1 to n is therefore missing.
         if (index == mNumPoints - 1){
             xRatio += ( di.getWindowWidth() / mNumPoints );
             xRatio = ceil( xRatio ); // ceil because the division might left one pixel out

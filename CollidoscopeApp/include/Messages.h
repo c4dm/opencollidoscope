@@ -31,7 +31,9 @@ enum class Command {
     // message sent when a new recording starts. The gui resets the wave upon receiving it. 
     WAVE_START,
 
+    // new grain created 
     TRIGGER_UPDATE,
+    // synth became idle
     TRIGGER_END,
 
     NOTE_ON,
@@ -43,10 +45,9 @@ enum class Command {
 
 /** Message sent from the audio thread to the graphic wave when a new wave is recorded. 
  *  
- *  The graphic thread set the chunks of the wave to reflect the level of the recorded audio. 
- *  The algorithm takes the maximum and minimum value of a group of samples and this becomes the top and bottom of the samples.
- *  It contains the inde
- *  the cursor position when the grains are reset.
+ *  The graphic thread sets the chunks of the wave to reflect the level of the recorded audio. 
+ *  The algorithm takes the maximum and minimum value of a group of samples and this becomes the top and bottom of the chunk.
+ *  The message carries also the index of the chunk it refers to 
  */
 struct RecordWaveMsg
 {

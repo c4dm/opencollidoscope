@@ -40,7 +40,7 @@ typedef ci::audio::dsp::RingBufferT<CursorTriggerMsg> CursorTriggerMsgRingBuffer
 struct RandomGenerator;
 
 /*
-A node in the Cinder audio graph that holds a PGranular 
+A node in the Cinder audio graph that holds PGranulars for loop and keyboard playing  
 */
 class PGranularNode : public ci::audio::Node
 {
@@ -82,7 +82,7 @@ protected:
 private:
 
     // Wraps a std::atomic but get() returns a boost::optional that is set to a real value only when the atomic has changed. 
-    //  It is used to avoid calling PGranulat setter methods with *  the same value at each audio callback.
+    //  It is used to avoid calling PGranular setter methods with the same value at each audio callback.
     template< typename T>
     class LazyAtomic
     {
@@ -120,13 +120,13 @@ private:
     // pointers to PGranular objects 
     std::unique_ptr < collidoscope::PGranular<float, RandomGenerator, PGranularNode > > mPGranularLoop;
     std::array<std::unique_ptr < collidoscope::PGranular<float, RandomGenerator, PGranularNode > >, kMaxVoices> mPGranularNotes;
-    // maps midi notes to pgranulars. When a noteOff is received maks sure the right PGranular is turned off
+    // maps midi notes to pgranulars. When a noteOff is received makes sure the right PGranular is turned off
     std::array<int, kMaxVoices> mMidiNotes;
 
     // pointer to the random generator struct passed over to PGranular 
     std::unique_ptr< RandomGenerator > mRandomOffset;
     
-    // buffer containing the recorder audio, to pass to PGranular in initialize()
+    // buffer containing the recorded audio, to pass to PGranular in initialize()
     ci::audio::Buffer *mGrainBuffer;
 
     ci::audio::BufferRef mTempBuffer;

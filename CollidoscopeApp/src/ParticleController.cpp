@@ -33,7 +33,7 @@ ParticleController::ParticleController() :
 mNumParticles( 0 )
 
 {
-    // uses Cinder (and OpenGL) virtual buffer object based drawing
+    // uses Cinder (and OpenGL) drawing based on virtual buffer object
     // see ParticleSphereCPU example in Cinder library 
      
     mParticles.assign( kMaxParticles, Particle() );
@@ -97,7 +97,7 @@ mNumParticles( 0 )
 
 void ParticleController::updateParticles()
 {
-    // update the positions of the particles and dispose them if they're reached their timespan
+    // update the positions of the particles and dispose them if they've reached their timespan
     for ( size_t i = 0; i < mNumParticles; i++ ){
 
         Particle &particle = mParticles[i];
@@ -132,7 +132,7 @@ void ParticleController::updateParticles()
 
 void ParticleController::addParticles(int amount, const vec2 &initialLocation, const float cloudSize)
 {
-    // reduce the particles liearly to the total number of particles already present 
+    // reduce the particles linearly to the total number of particles already present 
     // the more particles aleary present the less particle are added
     int reduction = ci::lmap<int>(mNumParticles, 0, kMaxParticles, 0, kMaxParticleAdd);
     amount -= reduction;

@@ -88,7 +88,7 @@ public:
         void setSize( size_t size );
         
         /** The particle spread parameter affects the size of the cloud of particles
-         *  The cloud is the visual conterpart of the grain duration coefficien in sound.
+         *  The cloud is the visual counterpart of the grain duration coefficient in sound.
          *  Indeed spread accepts values from 1 to 8, exactly as the duration coefficient
          */
         void inline setParticleSpread( float spread ){
@@ -148,7 +148,7 @@ public:
 
     /* Maps id of the synth to cursor. There is one cursor for each Synth being played */
     std::map < SynthID, Cursor > mCursors;
-    /** Holds the positions of the cursor, namely on which chunk the cursor is currently */
+    /** Holds the positions of the cursor, namely on which chunk the cursor is currently on */
     std::vector<int> mCursorsPos;
 
 public:
@@ -156,13 +156,12 @@ public:
     // value used to identify the loop for cursor position 
     static const int kLoopNote = -1;
     static const cinder::Color CURSOR_CLR;
-    /* must be in sync with supercollider durationFactor ControlSpec max */
     static const int MAX_DURATION = 8;
 #ifdef USE_PARTICLES
     static const int PARTICLESIZE_COEFF = 40;
 #endif
 
-    /** Resetting a wave makes it shrink until it disappears. Each time a new sample is recorder the wave is reset
+    /** Resetting a wave makes it shrink until it disappears. Each time a new sample is recorded, the wave is reset.
      *  \param onlyChunks if false the selection is also set to null, if true only the chunks are reset
      */
     void reset(bool onlyChunks);
@@ -174,7 +173,7 @@ public:
 
     const Chunk & getChunk(size_t index);
 
-    /** places the cursor on the wave. Every cursor is associated to a synth voice of the audio engine. 
+    /** Places the cursor on the wave. Every cursor is associated to a synth voice of the audio engine. 
      *  The synth id identifies uniquely the cursor in the internal map of the wave.
      *  If the cursor doesn't exist it is created */
     inline void setCursorPos( SynthID id, int pos, const DrawInfo& di ){
@@ -184,14 +183,14 @@ public:
         cursor.lastUpdate = ci::app::getElapsedSeconds();
 
 #ifdef USE_PARTICLES
-        // The idea is that, if the duration is greater than 1.0, the cursor continues in form of particles
-        // The smaller the selection the more particles; the bigger the duration the more particles 
+        // The idea is that, if the duration is greater than 1.0, the cursor continues in form of particles.
+        // The smaller the selection the more particles; the bigger the duration the more particles. 
         if (mSelection.getParticleSpread() > 1.0f){
             /* amountCoeff ranges from 1/8 to 1 */
             const float amountCoeff = (mSelection.getParticleSpread() / MAX_DURATION);
                 
             /* get radom point within seleciton as center of the particle */
-            vec2 centrePoint; // was former getRandomPoint
+            vec2 centrePoint;
             const int randomChunkIndex = ci::Rand::randInt(mSelection.getStart(), mSelection.getEnd() );
 
             centrePoint.x = di.flipX( 1 + (randomChunkIndex * (2 + Chunk::kWidth)) + Chunk::kWidth / 2 );
@@ -243,6 +242,7 @@ private:
 
     cinder::Color mColor;
 
+    // How much filter is applied in audio. It affects the alpha value of the selection color.
     float mFilterCoeff;
 
     // cinder gl batch for batch drawing 

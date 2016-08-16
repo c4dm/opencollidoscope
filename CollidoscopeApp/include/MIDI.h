@@ -31,7 +31,7 @@ class Config;
 
 namespace collidoscope {
 
-
+// Exception thrown by MIDI system
 class MIDIException : public std::exception
 {
 public:
@@ -118,10 +118,10 @@ private:
     // of saving all the messages in mMIDIMessages just save the last received in mPitchBendMessages 
     // and optimize away redundant messages.
     std::array< MIDIMessage, NUM_WAVES > mPitchBendMessages;
-    // Same principle of pitch bend messages 
+    // Same principle as mPitchBendMessages
     std::array< MIDIMessage, NUM_WAVES > mFilterMessages;
 
-    // vecotr containing all the MIDI input devices detected.
+    // vector containing all the MIDI input devices detected.
     std::vector< std::unique_ptr <RtMidiIn> > mInputs;
     // Used for mutual access to the MIDI messages by the MIDI thread and the graphic thread.  
     std::mutex mMutex;

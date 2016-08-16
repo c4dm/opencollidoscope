@@ -65,7 +65,7 @@ void PGranularNode::initialize()
 {
     mTempBuffer = std::make_shared< ci::audio::Buffer >( getFramesPerBlock() );
 
-    mRandomOffset.reset( new RandomGenerator( getSampleRate() / 100 ) ); // divided by 100 corresponds to times 0.01 in the time domain 
+    mRandomOffset.reset( new RandomGenerator( getSampleRate() / 100 ) ); // divided by 100 corresponds to multiplied by 0.01 in the time domain 
 
     /* create the PGranular object for looping */
     mPGranularLoop.reset( new collidoscope::PGranular<float, RandomGenerator, PGranularNode>( mGrainBuffer->getData(), mGrainBuffer->getNumFrames(), getSampleRate(), *mRandomOffset, *this, -1 ) );
@@ -132,7 +132,7 @@ void PGranularNode::process (ci::audio::Buffer *buffer )
     }
 }
 
-// Called back when new grnular is triggered of turned off. Sends notification message to graphic thread.
+// Called back when new PGranular is triggered or turned off. Sends notification message to graphic thread.
 void PGranularNode::operator()( char msgType, int ID ) {
 
     switch ( msgType ){
@@ -167,7 +167,7 @@ void PGranularNode::handleNoteMsg( const NoteMsg &msg )
         }
 
         if ( !synthFound ){
-            // then look for a free synth 
+            // then look for a free voice 
             for ( int i = 0; i < kMaxVoices; i++ ){
 
                 if ( mMidiNotes[i] == kNoMidiNote ){

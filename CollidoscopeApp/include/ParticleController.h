@@ -36,7 +36,7 @@ class ParticleController {
         ci::vec2	mCloudCenter; // initial positin of the particle 
         ci::vec2	mVel;         // velocity 
         float       mCloudSize;   // how big is the area where particle float around. When a particle hits the 
-                                  //   border of the area it gets deflected 
+                                  // border of the area it gets deflected 
 
         int			mAge;      // when mAge == mLifeSpan the particle is disposed 
         int			mLifespan; // how long a particle lives

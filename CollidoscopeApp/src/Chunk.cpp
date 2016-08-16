@@ -44,7 +44,7 @@ void update( const DrawInfo& di )
 void Chunk::update( const DrawInfo &di )
 {
     using namespace ci;
-    /* if resetting animate the chunks to shrink to 0 size */
+    /* if resetting animate the chunks to nicely shrink to 0 size */
     if ( mResetting ){
         if ( mAnimate > 0.0f ){
             mAnimate -= 0.1f;
@@ -64,7 +64,7 @@ void Chunk::update( const DrawInfo &di )
         }
     }
 
-    mX = di.flipX( 1 + (mIndex * (2 + kWidth)) ); // FIXME this should happen only once when resized 
+    mX = di.flipX( 1 + (mIndex * (2 + kWidth)) ); // FIXME more efficient if it happens only once when resized 
 }
 
 void Chunk::draw( const DrawInfo& di, ci::gl::BatchRef &batch ){
@@ -74,11 +74,10 @@ void Chunk::draw( const DrawInfo& di, ci::gl::BatchRef &batch ){
 
     const float chunkHeight = mAnimate * mAudioTop * di.getMaxChunkHeight();
 
-    // place the chunk in the right position brigns back the y of chunkHeight/2 so
+    // place the chunk in the right position brings back the y of chunkHeight/2 so
     // so that after scaling the wave is still centered at the wave center 
     gl::translate( mX, di.getWaveCenterY() - ( chunkHeight / 2 ) - 1 );
 
-    // FIXME todo use max between top and bottom
     // scale according to audio amplitude 
     gl::scale( 1.0f, chunkHeight );
     batch->draw();

@@ -21,8 +21,8 @@
 */
 
 #include "AudioEngine.h"
+// app.h include not used 
 #include "cinder/app/App.h"
-//FIXME remove App.h include 
 #include "Log.h"
 
 using namespace ci::audio;
@@ -87,7 +87,7 @@ void AudioEngine::setup(const Config& config)
     /* audio context */
     auto ctx = Context::master();
 
-    /* audio inpu device */
+    /* audio input device */
     auto inputDeviceNode = ctx->createInputDeviceNode( Device::getDefaultInput() );
  
 
@@ -102,13 +102,13 @@ void AudioEngine::setup(const Config& config)
         /* this prevents the node from recording before record is pressed */
         mBufferRecorderNodes[chan]->setAutoEnabled( false );
 
-        // route the input part of the audio graph. Two channels input goes into
-        // one channel route and to one channel buffer recorder 
+        // route the input part of the audio graph. Two channels input goes into one channel route
+        // and from one channel route to one channel buffer recorder 
         inputDeviceNode >> mInputRouterNodes[chan]->route( chan, 0, 1 ) >> mBufferRecorderNodes[chan];
 
 
         // create PGranular loops passing the buffer of the RecorderNode as argument to the contructor 
-        // use -1 as ID 
+        // use -1 as ID as the loop corresponds to no midi note 
         mPGranularNodes[chan] = ctx->makeNode( new PGranularNode( mBufferRecorderNodes[chan]->getRecorderBuffer(), mCursorTriggerRingBufferPacks[chan]->getBuffer() ) );
 
         // create filter nodes 
@@ -126,7 +126,7 @@ void AudioEngine::setup(const Config& config)
         // filter goes to output 
         mLowPassFilterNodes[chan] >> mOutputRouterNodes[chan]->route( 0, chan, 1 ) >> ctx->getOutput();
         
-        // what goes to output goes to scope 
+        // what goes to output goes to oscilloscope as well
         mLowPassFilterNodes[chan] >> mOutputMonitorNodes[chan];
 
     }
