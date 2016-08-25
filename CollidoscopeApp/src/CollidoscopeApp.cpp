@@ -356,8 +356,8 @@ void CollidoscopeApp::receiveCommands()
             value |= MSB;
             
 
-            // value ranges from 0 to 1050. check boundaries in case sensor gives bad values 
-            if ( value > 149 ){ // FIXME pareametrizer 
+            // value ranges from 0 to 149. check boundaries in case sensor gives bad values 
+            if ( value > 149 ){ // FIXME can use wave.size() 
                 continue;
             }
 
@@ -461,8 +461,8 @@ CINDER_APP( CollidoscopeApp, RendererGl, [] ( App::Settings *settings) {
     }
     catch( std::invalid_argument & e ){
         console() << "Error: invalid arguments" << std::endl;
-        console() << "Usage: ./Collidoscope window_width window_height" << std::endl;  
-        console() << "For example: ./Collidoscope 1024 768 " << std::endl;  
+        console() << "Usage: ./CollidoscopeApp window_width window_height" << std::endl;  
+        console() << "For example: ./CollidoscopeApp 1024 768 " << std::endl;  
 
         settings->setShouldQuit( true );
         return;
